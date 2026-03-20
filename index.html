@@ -112,10 +112,10 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.3</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.4</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
-        <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="changeKey()">🔑 Key</button>
+        <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
       </div>
     </div>
     <nav>
@@ -196,8 +196,10 @@ let API_KEY='',recipes=[],vesperRecipes=[],shoppingList=[],weekPlan={},vesperPla
 const DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'],WEEKDAYS=['Mo','Di','Mi','Do','Fr'];
 let daySettings={Mo:{maxMin:40},Di:{maxMin:40},Mi:{maxMin:40},Do:{maxMin:40},Fr:{maxMin:null}};
 const SK={recipes:'kochapp-recipes',vesper:'kochapp-vesper-recipes',shopping:'kochapp-shopping',week:'kochapp-week',vesperplan:'kochapp-vesperplan',settings:'kochapp-daysettings'};
-async function storageSave(k,v){try{await window.storage.set(k,JSON.stringify(v));}catch(e){localStorage.setItem(k,JSON.stringify(v));}}
-async function storageLoad(k){try{const r=await window.storage.get(k);return r?JSON.parse(r.value):null;}catch(e){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e2){return null;}}}
+// Rezepte & Vesper = shared (gemeinsam pro Key), Rest = privat
+const SHARED_KEYS=['kochapp-recipes','kochapp-vesper-recipes'];
+async function storageSave(k,v){const shared=SHARED_KEYS.includes(k);try{await window.storage.set(k,JSON.stringify(v),shared);}catch(e){localStorage.setItem(k,JSON.stringify(v));}}
+async function storageLoad(k){const shared=SHARED_KEYS.includes(k);try{const r=await window.storage.get(k,shared);return r?JSON.parse(r.value):null;}catch(e){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e2){return null;}}}
 function setSyncStatus(s,t){const el=document.getElementById('sync-status');if(!el)return;el.innerHTML=`<span class="sync-dot ${s}"></span>${t}`;}
 async function saveAll(){
   setSyncStatus('busy','Speichert…');
@@ -220,6 +222,37 @@ function defaultVesperRecipes(){return[{id:'v1',name:'Apfel mit Käse',image:nul
 window.onload=async()=>{await loadAll();const k=localStorage.getItem('ka_key');if(k){API_KEY=k;launchApp();}};
 function startApp(){const k=document.getElementById('api-key-input').value.trim();if(!k.startsWith('sk-')){document.getElementById('api-error').style.display='block';return;}API_KEY=k;localStorage.setItem('ka_key',k);launchApp();}
 function launchApp(){document.getElementById('api-screen').style.display='none';document.getElementById('app').style.display='flex';document.getElementById('app').style.flexDirection='column';renderVesper();}
+function showKeyModal(){
+  const modal=document.getElementById('picker-modal');modal.style.display='block';
+  const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
+  modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
+    <div class="serif" style="font-size:20px;margin-bottom:4px;">🔑 API-Key</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div id="key-display" style="font-size:12px;font-family:monospace;word-break:break-all;color:var(--text);">${masked}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="toggleKeyVisibility()"  id="toggle-key-btn">👁 Anzeigen</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="copyKey()">📋 Kopieren</button>
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:8px;" onclick="closePicker();changeKey()">🔄 Key ändern</button>
+    <button class="btn btn-ghost" style="width:100%;" onclick="closePicker()">Schließen</button>
+  </div></div>`;
+}
+let keyVisible=false;
+function toggleKeyVisibility(){
+  keyVisible=!keyVisible;
+  const el=document.getElementById('key-display');
+  const btn=document.getElementById('toggle-key-btn');
+  if(el){el.textContent=keyVisible?API_KEY:API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);}
+  if(btn){btn.textContent=keyVisible?'🙈 Verstecken':'👁 Anzeigen';}
+}
+function copyKey(){
+  navigator.clipboard.writeText(API_KEY).then(()=>toast('✓ Key kopiert!')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=API_KEY;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('✓ Key kopiert!');
+  });
+}
 function changeKey(){document.getElementById('api-key-input').value=API_KEY;document.getElementById('api-screen').style.display='flex';document.getElementById('app').style.display='none';}
 function showTab(tab){
   currentTab=tab;
