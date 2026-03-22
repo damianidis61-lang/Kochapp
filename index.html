@@ -114,7 +114,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.1</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.2</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -152,7 +152,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <div id="mittag-toolbar" style="margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <span id="recipe-count" style="color:var(--muted);font-size:13px;"></span>
-            <button class="btn btn-primary" id="btn-add-recipe" onclick="showAddRecipe('mittag')">+ Mittagessen</button>
+
           </div>
           <input type="text" id="recipe-search" placeholder="🔍 Suchen z.B. Nudeln, Zucchini…" oninput="filterRecipes(this.value)" style="margin-bottom:0;">
         </div>
@@ -164,7 +164,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <div id="vesper-r-toolbar" style="margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <span id="vesper-recipe-count" style="color:var(--muted);font-size:13px;"></span>
-            <button class="btn btn-primary" id="btn-add-vesper" onclick="showAddRecipe('vesper')">+ Vesper</button>
+
           </div>
           <div style="display:flex;gap:8px;">
             <button class="sub-btn active" id="vesper-col-salzig" onclick="setVesperCol('salzig')">🧀 Salzig</button>
@@ -191,6 +191,10 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
   </main>
   <div class="bottom-bar">
     <button class="bottom-btn" id="btn-rezepte" onclick="showTab('rezepte')"><span style="font-size:18px;">📖</span> Rezepte</button>
+    <div id="btn-add-center" style="display:none;flex-direction:column;gap:5px;align-items:center;">
+      <button class="btn btn-primary" id="btn-add-mittag" onclick="showAddRecipe('mittag')" style="font-size:12px;padding:8px 14px;display:none;">+ Mittagessen</button>
+      <button class="btn btn-primary" id="btn-add-vesper-b" onclick="showAddRecipe('vesper')" style="font-size:12px;padding:8px 14px;display:none;">+ Vesper</button>
+    </div>
     <button class="bottom-btn" id="btn-einkauf" onclick="showTab('einkauf')"><span style="font-size:18px;">🛒</span> Einkauf</button>
   </div>
 </div>
@@ -277,7 +281,7 @@ function copyKey(){
 function exportJSON(){
   const data={
     exportDate: new Date().toLocaleDateString('de-DE'),
-    version: 'v7.1',
+    version: 'v7.2',
     mittagessen: recipes,
     vesper: vesperRecipes
   };
@@ -387,14 +391,31 @@ function showTab(tab){
   ['vesper','woche','rezepte','einkauf'].forEach(t=>{const p=document.getElementById('page-'+t);if(p)p.classList.toggle('active',t===tab);const n=document.getElementById('nav-'+t);if(n)n.classList.toggle('active',t===tab);});
   document.getElementById('btn-rezepte')?.classList.toggle('active',tab==='rezepte');
   document.getElementById('btn-einkauf')?.classList.toggle('active',tab==='einkauf');
+  updateAddButtons(tab, currentSubTab);
   if(tab==='vesper')renderVesper();
   if(tab==='woche')renderWeek();
   if(tab==='rezepte')showSubTab(currentSubTab);
   if(tab==='einkauf')renderShopping();
 }
+function updateAddButtons(tab, sub){
+  const center=document.getElementById('btn-add-center');
+  const bm=document.getElementById('btn-add-mittag');
+  const bv=document.getElementById('btn-add-vesper-b');
+  if(!center)return;
+  if(tab==='rezepte'){
+    center.style.display='flex';
+    if(bm)bm.style.display=sub==='mittag'?'block':'none';
+    if(bv)bv.style.display=sub==='vesper-r'?'block':'none';
+  } else {
+    center.style.display='none';
+    if(bm)bm.style.display='none';
+    if(bv)bv.style.display='none';
+  }
+}
 function showSubTab(sub){
   currentSubTab=sub;
   ['mittag','vesper-r'].forEach(s=>{const p=document.getElementById('sub-page-'+s);if(p)p.style.display=s===sub?'block':'none';const b=document.getElementById('sub-'+s);if(b)b.classList.toggle('active',s===sub);});
+  updateAddButtons('rezepte', sub);
   if(sub==='mittag')renderRecipes();
   if(sub==='vesper-r')renderVesperRecipes();
 }
@@ -463,7 +484,31 @@ function showRecipeDetail(id,ctx,portions){
       ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
     </div>
     <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">👩‍🍳 Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
-    <button class="btn btn-danger" style="width:100%;" onclick="deleteRecipeCtx('${id}','${ctx}')">Rezept löschen</button>`;
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="editRecipe('${id}','${ctx}')">✏️ Bearbeiten</button>
+      <button class="btn btn-danger" style="flex:1;" onclick="deleteRecipeCtx('${id}','${ctx}')">🗑️ Löschen</button>
+    </div>`;
+}
+function editRecipe(id,ctx){
+  const pool=ctx==='vesper'?vesperRecipes:recipes;
+  const r=pool.find(x=>x.id===id);
+  formContext=ctx;
+  formData={
+    id:r.id, name:r.name, time:r.time, servings:String(r.servings),
+    tags:(r.tags||[]).join(', '), type:r.type,
+    vesperKat:r.vesperKat||'salzig',
+    ingredients:r.ingredients.map(i=>({...i})),
+    steps:[...r.steps], image:null, editMode:true
+  };
+  const listId=ctx==='vesper'?'vesper-recipe-list':'recipe-list';
+  const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
+  const formId=ctx==='vesper'?'add-vesper-recipe-form':'add-recipe-form';
+  const tbId=ctx==='vesper'?'vesper-r-toolbar':'mittag-toolbar';
+  document.getElementById(listId).style.display='none';
+  document.getElementById(detId).style.display='none';
+  document.getElementById(tbId).style.display='none';
+  renderAddForm(ctx);
+  document.getElementById(formId).style.display='block';
 }
 function backToList(ctx){
   const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
@@ -491,7 +536,7 @@ function showAddRecipe(ctx){
 function renderAddForm(ctx){
   const isV=ctx==='vesper',formId=isV?'add-vesper-recipe-form':'add-recipe-form';
   document.getElementById(formId).innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h2 class="serif" style="font-size:22px;">Neues ${isV?'Vesper-':''}Rezept</h2><button class="btn btn-ghost" onclick="backToList('${ctx}')">Abbrechen</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><h2 class="serif" style="font-size:22px;">${formData.editMode?(isV?'Vesper bearbeiten':'Rezept bearbeiten'):(isV?'Neues Vesper-Rezept':'Neues Rezept')}</h2><button class="btn btn-ghost" onclick="backToList('${ctx}')">Abbrechen</button></div>
     <div onclick="document.getElementById('photo-input-${ctx}').click()" style="width:100%;height:120px;border-radius:16px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:16px;overflow:hidden;position:relative;background:${formData.image?`url(${formData.image}) center/cover`:'var(--surface)'};">
       ${formData.image?`<div style="position:absolute;bottom:8px;right:8px;background:var(--green);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;">✓ KI analysiert</div>`:`<div style="font-size:28px;margin-bottom:4px;">📷</div><div style="font-size:13px;color:var(--muted);">Foto für KI-Analyse</div>`}
       <div id="ai-overlay-${ctx}" style="display:none;position:absolute;inset:0;background:rgba(245,240,232,.9);align-items:center;justify-content:center;flex-direction:column;gap:10px;"><div class="spinner"></div><div style="font-size:13px;color:var(--accent);font-weight:600;">KI analysiert…</div></div>
@@ -546,7 +591,19 @@ async function handlePhoto(e,ctx){
     renderAddForm(ctx);if(formData.aiError){const el=document.getElementById('ai-error-'+ctx);if(el){el.style.display='block';el.textContent=formData.aiError;}}
   };reader.readAsDataURL(file);
 }
-function saveRecipe(ctx){syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}const r={id:(ctx==='vesper'?'v':'r')+Date.now(),name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};if(ctx==='vesper')vesperRecipes.push(r);else recipes.push(r);saveAll();toast('✓ Rezept gespeichert!');backToList(ctx);}
+function saveRecipe(ctx){
+  syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}
+  const r={id:formData.editMode?formData.id:(ctx==='vesper'?'v':'r')+Date.now(),name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
+  if(formData.editMode){
+    if(ctx==='vesper'){const idx=vesperRecipes.findIndex(x=>x.id===r.id);if(idx>=0)vesperRecipes[idx]=r;}
+    else{const idx=recipes.findIndex(x=>x.id===r.id);if(idx>=0)recipes[idx]=r;}
+    toast('✓ Rezept aktualisiert!');
+  } else {
+    if(ctx==='vesper')vesperRecipes.push(r);else recipes.push(r);
+    toast('✓ Rezept gespeichert!');
+  }
+  saveAll();backToList(ctx);
+}
 function addManualItem(){const name=document.getElementById('new-item').value.trim();if(!name)return;const amount=document.getElementById('new-amount').value.trim();shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name,amount,source:'Manuell',checked:false});document.getElementById('new-item').value='';document.getElementById('new-amount').value='';saveAll();renderShopping();}
 function renderShopping(){const unc=shoppingList.filter(x=>!x.checked),chk=shoppingList.filter(x=>x.checked);let html='';if(!shoppingList.length){html=`<div style="text-align:center;padding:48px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">🛒</div><p>Noch nichts auf der Liste.</p></div>`;}else{if(unc.length){html+=`<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;">Zu kaufen (${unc.length})</div>`;html+=unc.map(shopItemHTML).join('');}if(chk.length){html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 9px;"><span style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Erledigt (${chk.length})</span><button class="btn btn-ghost" style="font-size:11px;padding:5px 11px;" onclick="clearChecked()">Löschen</button></div>`;html+=chk.map(shopItemHTML).join('');}}document.getElementById('shopping-list-container').innerHTML=html;}
 function shopItemHTML(item){return`<div class="card" style="display:flex;align-items:center;gap:13px;margin-bottom:9px;padding:13px 15px;opacity:${item.checked?.5:1};"><div class="check-circle ${item.checked?'done':''}" onclick="toggleShop('${item.id}')">${item.checked?'✓':''}</div><div style="flex:1;"><div style="font-size:14px;text-decoration:${item.checked?'line-through':'none'};"><span style="color:var(--accent);font-weight:500;">${escHtml(item.amount)}</span>${item.amount?' ':''} ${escHtml(item.name)}</div><div style="font-size:11px;color:var(--muted);">${escHtml(item.source)}</div></div><button onclick="removeShop('${item.id}')" style="background:none;border:none;color:var(--muted);font-size:20px;padding:2px 4px;line-height:1;">×</button></div>`;}
