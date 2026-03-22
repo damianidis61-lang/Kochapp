@@ -224,7 +224,7 @@ function defaultVesperRecipes(){return[{id:'v1',name:'Apfel mit Käse',image:nul
 const JSONBIN_ID='69bfcf84aa77b81da909b064';
 let JB_KEY='';
 async function jbLoad(){try{const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`,{headers:{'X-Master-Key':JB_KEY,'X-Bin-Meta':false}});if(!r.ok)return null;return await r.json();}catch(e){return null;}}
-async function jbSave(data){try{await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':JB_KEY},body:JSON.stringify(data)});}catch(e){console.warn('JSONBin save failed',e);}}
+async function jbSave(data){console.log('jbSave called, JB_KEY length:',JB_KEY.length);try{const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':JB_KEY},body:JSON.stringify(data)});console.log('jbSave status:',r.status);}catch(e){console.warn('JSONBin save failed',e);}}
 window.onload=async()=>{const k=localStorage.getItem('ka_key');const jk=localStorage.getItem('ka_jb');if(k&&jk){API_KEY=k;JB_KEY=jk;await loadAll();launchApp();}};
 function startApp(){const k=document.getElementById('api-key-input').value.trim();const jk=document.getElementById('jb-key-input').value.trim();if(!k.startsWith('sk-')||!jk){document.getElementById('api-error').style.display='block';return;}API_KEY=k;JB_KEY=jk;localStorage.setItem('ka_key',k);localStorage.setItem('ka_jb',jk);loadAll().then(()=>launchApp());}
 function launchApp(){document.getElementById('api-screen').style.display='none';document.getElementById('app').style.display='flex';document.getElementById('app').style.flexDirection='column';renderVesper();}
