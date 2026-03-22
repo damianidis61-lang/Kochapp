@@ -114,7 +114,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.7</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.8</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -268,7 +268,7 @@ function copyKey(){
 function exportJSON(){
   const data={
     exportDate: new Date().toLocaleDateString('de-DE'),
-    version: 'v6.7',
+    version: 'v6.8',
     mittagessen: recipes,
     vesper: vesperRecipes
   };
@@ -435,7 +435,10 @@ function backToList(ctx){
   const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
   const listId=ctx==='vesper'?'vesper-recipe-list':'recipe-list';
   const tbId=ctx==='vesper'?'vesper-r-toolbar':'mittag-toolbar';
+  const formId=ctx==='vesper'?'add-vesper-recipe-form':'add-recipe-form';
   document.getElementById(detId).style.display='none';
+  document.getElementById(formId).style.display='none';
+  document.getElementById(formId).innerHTML='';
   document.getElementById(listId).style.display='';
   document.getElementById(tbId).style.display='flex';
   if(ctx==='vesper')renderVesperRecipes();else renderRecipes();
