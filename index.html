@@ -114,7 +114,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.0</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.1</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -152,7 +152,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <div id="mittag-toolbar" style="margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <span id="recipe-count" style="color:var(--muted);font-size:13px;"></span>
-            <button class="btn btn-primary" onclick="showAddRecipe('mittag')">+ Hinzufügen</button>
+            <button class="btn btn-primary" id="btn-add-recipe" onclick="showAddRecipe('mittag')">+ Mittagessen</button>
           </div>
           <input type="text" id="recipe-search" placeholder="🔍 Suchen z.B. Nudeln, Zucchini…" oninput="filterRecipes(this.value)" style="margin-bottom:0;">
         </div>
@@ -164,7 +164,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <div id="vesper-r-toolbar" style="margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <span id="vesper-recipe-count" style="color:var(--muted);font-size:13px;"></span>
-            <button class="btn btn-primary" onclick="showAddRecipe('vesper')">+ Hinzufügen</button>
+            <button class="btn btn-primary" id="btn-add-vesper" onclick="showAddRecipe('vesper')">+ Vesper</button>
           </div>
           <div style="display:flex;gap:8px;">
             <button class="sub-btn active" id="vesper-col-salzig" onclick="setVesperCol('salzig')">🧀 Salzig</button>
@@ -277,7 +277,7 @@ function copyKey(){
 function exportJSON(){
   const data={
     exportDate: new Date().toLocaleDateString('de-DE'),
-    version: 'v7.0',
+    version: 'v7.1',
     mittagessen: recipes,
     vesper: vesperRecipes
   };
@@ -405,8 +405,7 @@ function parseMinutes(t){if(!t)return null;const m=t.match(/(\d+)/);return m?par
 function scaleAmount(amount,factor){if(!amount||factor===1)return amount;const m=amount.match(/^(\d+([.,]\d+)?)/);if(!m)return amount;const orig=parseFloat(m[1].replace(',','.'));const scaled=Math.round(orig*factor*10)/10;return amount.replace(m[1],scaled%1===0?String(scaled):String(scaled).replace('.',','));}
 function recipeCardHTML(r,ctx){const d=TYPES[r.type]||TYPES.vegetarian;return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showRecipeDetail('${r.id}','${ctx}')"><div style="width:52px;height:52px;border-radius:12px;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">${ctx==='vesper'?'🍎':d.icon}</div><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
 function renderRecipes(){
-  const counts=Object.fromEntries(Object.keys(TYPES).map(t=>[t,recipes.filter(r=>r.type===t).length]));
-  document.getElementById('recipe-count').innerHTML=`${recipes.length} Rezepte &nbsp;`+Object.entries(TYPES).map(([t,d])=>`<span style="color:${d.color}">${d.icon} ${counts[t]}</span>`).join(' &nbsp;');
+  document.getElementById('recipe-count').innerHTML=`${recipes.length} Rezepte`;
   document.getElementById('recipe-list').innerHTML=recipes.length?recipes.map(r=>recipeCardHTML(r,'mittag')).join(''):`<div style="text-align:center;padding:50px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">📖</div><p>Noch keine Rezepte.</p></div>`;
 }
 function renderVesperRecipes(){
