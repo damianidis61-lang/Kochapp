@@ -112,7 +112,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.5</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.6</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -236,6 +236,12 @@ function showKeyModal(){
       <button class="btn btn-primary" style="flex:1;" onclick="copyKey()">📋 Kopieren</button>
     </div>
     <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
+    <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">📦 Rezepte exportieren</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="exportJSON()">📄 JSON</button>
+      <button class="btn btn-ghost" style="flex:1;" onclick="exportPDF()">📋 PDF</button>
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
     <button class="btn btn-danger" style="width:100%;margin-bottom:8px;" onclick="confirmNewKey()">🔄 Neuen Key eingeben</button>
     <button class="btn btn-ghost" style="width:100%;" onclick="closePicker()">Schließen</button>
   </div></div>`;
@@ -253,7 +259,99 @@ function copyKey(){
     const ta=document.createElement('textarea');ta.value=API_KEY;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('✓ Key kopiert!');
   });
 }
-function confirmNewKey(){
+function exportJSON(){
+  const data={
+    exportDate: new Date().toLocaleDateString('de-DE'),
+    version: 'v6.6',
+    mittagessen: recipes,
+    vesper: vesperRecipes
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='KochApp_Rezepte_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('✓ JSON exportiert!');
+}
+
+function exportPDF(){
+  const lines=[];
+  lines.push('KochApp — Rezepte Export');
+  lines.push('Exportiert am: '+new Date().toLocaleDateString('de-DE'));
+  lines.push('');
+  lines.push('═══════════════════════════════');
+  lines.push('🍽️ MITTAGESSEN ('+recipes.length+' Rezepte)');
+  lines.push('═══════════════════════════════');
+  recipes.forEach((r,i)=>{
+    lines.push('');
+    lines.push((i+1)+'. '+r.name+' '+((TYPES[r.type]||TYPES.vegetarian).icon));
+    lines.push('   ⏱ '+r.time+' · 👤 '+r.servings+' Portionen');
+    if(r.tags?.length) lines.push('   Tags: '+r.tags.join(', '));
+    lines.push('   Zutaten:');
+    r.ingredients.forEach(ing=>lines.push('   • '+ing.amount+' '+ing.name));
+    lines.push('   Zubereitung:');
+    r.steps.forEach((s,si)=>lines.push('   '+(si+1)+'. '+s));
+  });
+  lines.push('');
+  lines.push('═══════════════════════════════');
+  lines.push('🍎 VESPER ('+vesperRecipes.length+' Rezepte)');
+  lines.push('═══════════════════════════════');
+  vesperRecipes.forEach((r,i)=>{
+    lines.push('');
+    lines.push((i+1)+'. '+r.name+' '+((TYPES[r.type]||TYPES.vegetarian).icon));
+    lines.push('   ⏱ '+r.time+' · 👤 '+r.servings+' Portionen');
+    if(r.tags?.length) lines.push('   Tags: '+r.tags.join(', '));
+    lines.push('   Zutaten:');
+    r.ingredients.forEach(ing=>lines.push('   • '+ing.amount+' '+ing.name));
+    lines.push('   Zubereitung:');
+    r.steps.forEach((s,si)=>lines.push('   '+(si+1)+'. '+s));
+  });
+  // HTML → Print als PDF
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>KochApp Rezepte</title>
+  <style>
+    body{font-family:'Helvetica Neue',Arial,sans-serif;max-width:700px;margin:40px auto;padding:20px;color:#2a1f0a;line-height:1.6;}
+    h1{color:#f0a500;font-size:28px;margin-bottom:4px;}
+    h2{color:#f0a500;font-size:20px;margin-top:32px;border-bottom:2px solid #f0a500;padding-bottom:6px;}
+    .recipe{margin-bottom:28px;padding:16px;border:1px solid #d8cdb8;border-radius:12px;page-break-inside:avoid;}
+    .recipe-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+    .meta{font-size:12px;color:#8a7a5a;margin-bottom:10px;}
+    .section{font-size:12px;font-weight:700;text-transform:uppercase;color:#8a7a5a;margin:10px 0 4px;}
+    li{font-size:14px;margin-bottom:3px;}
+    .date{font-size:12px;color:#8a7a5a;}
+    @media print{body{margin:20px;}}
+  </style></head><body>
+  <h1>🍳 KochApp — Rezepte</h1>
+  <p class="date">Exportiert am ${new Date().toLocaleDateString('de-DE')}</p>
+  <h2>🍽️ Mittagessen (${recipes.length})</h2>
+  ${recipes.map(r=>`<div class="recipe">
+    <div class="recipe-title">${r.name} ${ (TYPES[r.type]||TYPES.vegetarian).icon}</div>
+    <div class="meta">⏱ ${r.time} &nbsp;·&nbsp; 👤 ${r.servings} Port. &nbsp;·&nbsp; ${(r.tags||[]).join(', ')}</div>
+    <div class="section">Zutaten</div>
+    <ul>${r.ingredients.map(i=>`<li>${i.amount} ${i.name}</li>`).join('')}</ul>
+    <div class="section">Zubereitung</div>
+    <ol>${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+  </div>`).join('')}
+  <h2>🍎 Vesper (${vesperRecipes.length})</h2>
+  ${vesperRecipes.map(r=>`<div class="recipe">
+    <div class="recipe-title">${r.name} ${(TYPES[r.type]||TYPES.vegetarian).icon}</div>
+    <div class="meta">⏱ ${r.time} &nbsp;·&nbsp; 👤 ${r.servings} Port. &nbsp;·&nbsp; ${(r.tags||[]).join(', ')}</div>
+    <div class="section">Zutaten</div>
+    <ul>${r.ingredients.map(i=>`<li>${i.amount} ${i.name}</li>`).join('')}</ul>
+    <div class="section">Zubereitung</div>
+    <ol>${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+  </div>`).join('')}
+  </body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),500);
+  toast('✓ PDF wird geöffnet — Drucken → Als PDF speichern');
+}
+
   closePicker();
   const modal=document.getElementById('autoplan-modal');modal.style.display='block';
   modal.innerHTML=`<div class="modal-overlay"><div class="modal-box" onclick="event.stopPropagation()">
