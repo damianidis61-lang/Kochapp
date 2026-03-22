@@ -114,7 +114,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.9</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.0</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -149,18 +149,27 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <button class="sub-btn" id="sub-vesper-r" onclick="showSubTab('vesper-r')">🍎 Vesper</button>
       </div>
       <div id="sub-page-mittag">
-        <div id="mittag-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <span id="recipe-count" style="color:var(--muted);font-size:13px;"></span>
-          <button class="btn btn-primary" onclick="showAddRecipe('mittag')">+ Hinzufügen</button>
+        <div id="mittag-toolbar" style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span id="recipe-count" style="color:var(--muted);font-size:13px;"></span>
+            <button class="btn btn-primary" onclick="showAddRecipe('mittag')">+ Hinzufügen</button>
+          </div>
+          <input type="text" id="recipe-search" placeholder="🔍 Suchen z.B. Nudeln, Zucchini…" oninput="filterRecipes(this.value)" style="margin-bottom:0;">
         </div>
         <div id="recipe-list"></div>
         <div id="recipe-detail" style="display:none;"></div>
         <div id="add-recipe-form" style="display:none;"></div>
       </div>
       <div id="sub-page-vesper-r" style="display:none;">
-        <div id="vesper-r-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <span id="vesper-recipe-count" style="color:var(--muted);font-size:13px;"></span>
-          <button class="btn btn-primary" onclick="showAddRecipe('vesper')">+ Hinzufügen</button>
+        <div id="vesper-r-toolbar" style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span id="vesper-recipe-count" style="color:var(--muted);font-size:13px;"></span>
+            <button class="btn btn-primary" onclick="showAddRecipe('vesper')">+ Hinzufügen</button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="sub-btn active" id="vesper-col-salzig" onclick="setVesperCol('salzig')">🧀 Salzig</button>
+            <button class="sub-btn" id="vesper-col-suess" onclick="setVesperCol('suess')">🍰 Süß</button>
+          </div>
         </div>
         <div id="vesper-recipe-list"></div>
         <div id="vesper-recipe-detail" style="display:none;"></div>
@@ -268,7 +277,7 @@ function copyKey(){
 function exportJSON(){
   const data={
     exportDate: new Date().toLocaleDateString('de-DE'),
-    version: 'v6.9',
+    version: 'v7.0',
     mittagessen: recipes,
     vesper: vesperRecipes
   };
@@ -402,7 +411,28 @@ function renderRecipes(){
 }
 function renderVesperRecipes(){
   document.getElementById('vesper-recipe-count').innerHTML=`${vesperRecipes.length} Vesper-Rezepte`;
-  document.getElementById('vesper-recipe-list').innerHTML=vesperRecipes.length?vesperRecipes.map(r=>recipeCardHTML(r,'vesper')).join(''):`<div style="text-align:center;padding:50px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">🍎</div><p>Noch keine Vesper-Rezepte.</p></div>`;
+  const filtered=vesperRecipes.filter(r=>(r.vesperKat||'salzig')===currentVesperCol);
+  document.getElementById('vesper-recipe-list').innerHTML=filtered.length
+    ?filtered.map(r=>recipeCardHTML(r,'vesper')).join('')
+    :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">${currentVesperCol==='salzig'?'🧀':'🍰'}</div><p>Noch keine ${currentVesperCol==='salzig'?'salzigen':'süßen'} Vesper-Rezepte.</p></div>`;
+}
+let currentVesperCol='salzig';
+function setVesperCol(col){
+  currentVesperCol=col;
+  document.getElementById('vesper-col-salzig').className='sub-btn'+(col==='salzig'?' active':'');
+  document.getElementById('vesper-col-suess').className='sub-btn'+(col==='suess'?' active':'');
+  renderVesperRecipes();
+}
+function filterRecipes(q){
+  const query=q.toLowerCase().trim();
+  const filtered=query?recipes.filter(r=>
+    r.name.toLowerCase().includes(query)||
+    (r.tags||[]).some(t=>t.toLowerCase().includes(query))||
+    (r.ingredients||[]).some(i=>i.name.toLowerCase().includes(query))
+  ):recipes;
+  document.getElementById('recipe-list').innerHTML=filtered.length
+    ?filtered.map(r=>recipeCardHTML(r,'mittag')).join('')
+    :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><p>Keine Rezepte gefunden für "${q}"</p></div>`;
 }
 function showRecipeDetail(id,ctx,portions){
   const pool=ctx==='vesper'?vesperRecipes:recipes;
@@ -416,10 +446,15 @@ function showRecipeDetail(id,ctx,portions){
   document.getElementById(formId).style.display='none';
   document.getElementById(tbId).style.display='none';
   const det=document.getElementById(detId);det.style.display='block';
+  const dd=TYPES[r.type]||TYPES.vegetarian;
   det.innerHTML=`<button class="btn btn-ghost" style="margin-bottom:18px;" onclick="backToList('${ctx}')">← Zurück</button>
-    <div style="width:100%;height:150px;border-radius:16px;margin-bottom:18px;border:1.5px solid var(--border);background:linear-gradient(135deg,var(--surface),var(--card2));display:flex;align-items:center;justify-content:center;font-size:56px;">${ctx==='vesper'?'🍎':'🍽️'}</div>
-    <h2 class="serif" style="font-size:26px;margin-bottom:8px;">${escHtml(r.name)}</h2>
-    <div style="display:flex;gap:7px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">${typeBadge(r.type)}<span class="tag">⏱ ${r.time}</span>${(r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+      <div style="width:72px;height:72px;border-radius:16px;background:${dd.color}22;display:flex;align-items:center;justify-content:center;font-size:42px;flex-shrink:0;">${ctx==='vesper'?'🍎':dd.icon}</div>
+      <div>
+        <h2 class="serif" style="font-size:24px;margin-bottom:4px;">${escHtml(r.name)}</h2>
+        <div style="font-size:12px;color:var(--muted);">⏱ ${r.time} &nbsp;·&nbsp; ${dd.label}${(r.tags||[]).length?' &nbsp;·&nbsp; '+r.tags.join(', '):''}</div>
+      </div>
+    </div>
     <div class="card" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
       <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">👤 Portionen</div><div style="font-size:11px;color:var(--muted);">Mengen werden angepasst</div></div>
       <div class="portion-scaler"><button class="portion-btn" onclick="showRecipeDetail('${id}','${ctx}',${Math.max(1,cur-1)})">−</button><div class="portion-num">${cur}</div><button class="portion-btn" onclick="showRecipeDetail('${id}','${ctx}',${cur+1})">+</button></div>
@@ -446,7 +481,7 @@ function backToList(ctx){
 function addIngToShop(id,ctx,portions){const pool=ctx==='vesper'?vesperRecipes:recipes;const r=pool.find(x=>x.id===id),factor=(portions||r.servings)/r.servings;r.ingredients.forEach(ing=>shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name:ing.name,amount:scaleAmount(ing.amount,factor),source:r.name+(factor!==1?` (${portions} Port.)`:''),checked:false}));saveAll();toast('✓ Zutaten zur Einkaufsliste hinzugefügt!');}
 function deleteRecipeCtx(id,ctx){if(!confirm('Rezept wirklich löschen?'))return;if(ctx==='vesper'){vesperRecipes=vesperRecipes.filter(x=>x.id!==id);Object.keys(vesperPlan).forEach(k=>{if(vesperPlan[k]?.id===id)delete vesperPlan[k];});}else{recipes=recipes.filter(x=>x.id!==id);Object.keys(weekPlan).forEach(k=>{if(weekPlan[k]?.id===id)delete weekPlan[k];});}saveAll();backToList(ctx);}
 function showAddRecipe(ctx){
-  formContext=ctx;formData={name:'',time:'',servings:'2',tags:'',type:'vegetarian',ingredients:[{name:'',amount:''}],steps:[''],image:null};
+  formContext=ctx;formData={name:'',time:'',servings:'2',tags:'',type:'vegetarian',vesperKat:'salzig',ingredients:[{name:'',amount:''}],steps:[''],image:null};
   const listId=ctx==='vesper'?'vesper-recipe-list':'recipe-list';
   const formId=ctx==='vesper'?'add-vesper-recipe-form':'add-recipe-form';
   const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
@@ -470,6 +505,11 @@ function renderAddForm(ctx){
       <button class="type-btn ${formData.type==='meat'?'sel-meat':''}" onclick="formData.type='meat';renderAddForm('${ctx}')">🥩 Fleisch</button>
       <button class="type-btn ${formData.type==='fish'?'sel-fish':''}" onclick="formData.type='fish';renderAddForm('${ctx}')">🐟 Fisch</button>
     </div>
+    ${isV?`<label class="label">Kategorie</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="type-btn ${(formData.vesperKat||'salzig')==='salzig'?'sel-veg':''}" onclick="formData.vesperKat='salzig';renderAddForm('${ctx}')">🧀 Salzig</button>
+      <button class="type-btn ${(formData.vesperKat||'salzig')==='suess'?'sel-meat':''}" onclick="formData.vesperKat='suess';renderAddForm('${ctx}')">🍰 Süß</button>
+    </div>`:''}
     <label class="label">Rezeptname *</label>
     <input type="text" id="f-name" value="${escHtml(formData.name)}" placeholder="${isV?'z.B. Apfel mit Käse':'z.B. Spaghetti Bolognese'}" style="margin-bottom:12px;">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
@@ -507,7 +547,7 @@ async function handlePhoto(e,ctx){
     renderAddForm(ctx);if(formData.aiError){const el=document.getElementById('ai-error-'+ctx);if(el){el.style.display='block';el.textContent=formData.aiError;}}
   };reader.readAsDataURL(file);
 }
-function saveRecipe(ctx){syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}const r={id:(ctx==='vesper'?'v':'r')+Date.now(),name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null};if(ctx==='vesper')vesperRecipes.push(r);else recipes.push(r);saveAll();toast('✓ Rezept gespeichert!');backToList(ctx);}
+function saveRecipe(ctx){syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}const r={id:(ctx==='vesper'?'v':'r')+Date.now(),name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};if(ctx==='vesper')vesperRecipes.push(r);else recipes.push(r);saveAll();toast('✓ Rezept gespeichert!');backToList(ctx);}
 function addManualItem(){const name=document.getElementById('new-item').value.trim();if(!name)return;const amount=document.getElementById('new-amount').value.trim();shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name,amount,source:'Manuell',checked:false});document.getElementById('new-item').value='';document.getElementById('new-amount').value='';saveAll();renderShopping();}
 function renderShopping(){const unc=shoppingList.filter(x=>!x.checked),chk=shoppingList.filter(x=>x.checked);let html='';if(!shoppingList.length){html=`<div style="text-align:center;padding:48px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">🛒</div><p>Noch nichts auf der Liste.</p></div>`;}else{if(unc.length){html+=`<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;">Zu kaufen (${unc.length})</div>`;html+=unc.map(shopItemHTML).join('');}if(chk.length){html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 9px;"><span style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Erledigt (${chk.length})</span><button class="btn btn-ghost" style="font-size:11px;padding:5px 11px;" onclick="clearChecked()">Löschen</button></div>`;html+=chk.map(shopItemHTML).join('');}}document.getElementById('shopping-list-container').innerHTML=html;}
 function shopItemHTML(item){return`<div class="card" style="display:flex;align-items:center;gap:13px;margin-bottom:9px;padding:13px 15px;opacity:${item.checked?.5:1};"><div class="check-circle ${item.checked?'done':''}" onclick="toggleShop('${item.id}')">${item.checked?'✓':''}</div><div style="flex:1;"><div style="font-size:14px;text-decoration:${item.checked?'line-through':'none'};"><span style="color:var(--accent);font-weight:500;">${escHtml(item.amount)}</span>${item.amount?' ':''} ${escHtml(item.name)}</div><div style="font-size:11px;color:var(--muted);">${escHtml(item.source)}</div></div><button onclick="removeShop('${item.id}')" style="background:none;border:none;color:var(--muted);font-size:20px;padding:2px 4px;line-height:1;">×</button></div>`;}
