@@ -352,6 +352,7 @@ function exportPDF(){
   toast('✓ PDF wird geöffnet — Drucken → Als PDF speichern');
 }
 
+function confirmNewKey(){
   closePicker();
   const modal=document.getElementById('autoplan-modal');modal.style.display='block';
   modal.innerHTML=`<div class="modal-overlay"><div class="modal-box" onclick="event.stopPropagation()">
