@@ -114,7 +114,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.2</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.3</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -126,19 +126,23 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
     </nav>
   </header>
   <main>
-    <!-- VESPER Mo-Fr -->
+    <!-- VESPER Mo-Fr mit Salzig+Süß -->
     <div id="page-vesper" class="page active">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <span id="vesper-count" style="color:var(--muted);font-size:13px;"></span>
+        <span style="color:var(--muted);font-size:13px;">Vesper Mo–Fr</span>
         <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openVesperPlan()">Planen →</button>
       </div>
       <div id="vesper-grid"></div>
     </div>
-    <!-- WOCHENPLAN nur Mittag -->
+    <!-- WOCHENPLAN 2 Wochen -->
     <div id="page-woche" class="page">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <span id="week-count" style="color:var(--muted);font-size:13px;"></span>
-        <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openAutoPlan()">Planen →</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="color:var(--muted);font-size:13px;">Mittag · 2 Wochen</span>
+        <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;white-space:nowrap;" onclick="openAutoPlan()">Planen →</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
+        <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
       </div>
       <div id="week-grid"></div>
     </div>
@@ -207,7 +211,7 @@ const TYPES={vegetarian:{icon:'🥦',label:'Vegetarisch',color:'var(--veg)',css:
 const typeIcon=t=>(TYPES[t]||TYPES.vegetarian).icon;
 const typeBadge=t=>{const d=TYPES[t]||TYPES.vegetarian;return`<span class="type-badge ${d.css}">${d.icon} ${d.label}</span>`;};
 const slotClass=t=>t?(TYPES[t]||TYPES.vegetarian).css+'-slot':'';
-let API_KEY='',recipes=[],vesperRecipes=[],shoppingList=[],weekPlan={},vesperPlan={},formData={},formContext='mittag',currentTab='vesper',currentSubTab='mittag';
+let API_KEY='',recipes=[],vesperRecipes=[],shoppingList=[],weekPlan={week1:{},week2:{}},vesperPlan={},formData={},formContext='mittag',currentTab='vesper',currentSubTab='mittag';
 const DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'],WEEKDAYS=['Mo','Di','Mi','Do','Fr'];
 let daySettings={Mo:{maxMin:40},Di:{maxMin:40},Mi:{maxMin:40},Do:{maxMin:40},Fr:{maxMin:null}};
 function setSyncStatus(s,t){const el=document.getElementById('sync-status');if(!el)return;el.innerHTML=`<span class="sync-dot ${s}"></span>${t}`;}
@@ -228,7 +232,7 @@ async function loadAll(){
   if(jbData&&jbData.mittag){recipes=jbData.mittag;vesperRecipes=jbData.vesper||[];}
   else{recipes=defaultRecipes();vesperRecipes=defaultVesperRecipes();}
   try{shoppingList=JSON.parse(localStorage.getItem('ka_shopping'))||[];}catch(e){shoppingList=[];}
-  try{weekPlan=JSON.parse(localStorage.getItem('ka_week'))||{};}catch(e){weekPlan={};}
+  try{const wp=JSON.parse(localStorage.getItem('ka_week'));weekPlan=(wp&&wp.week1)?wp:{week1:wp||{},week2:{}};}catch(e){weekPlan={week1:{},week2:{}};}
   try{vesperPlan=JSON.parse(localStorage.getItem('ka_vesperplan'))||{};}catch(e){vesperPlan={};}
   try{const d=JSON.parse(localStorage.getItem('ka_daysettings'));if(d)daySettings=d;}catch(e){}
 }
@@ -281,7 +285,7 @@ function copyKey(){
 function exportJSON(){
   const data={
     exportDate: new Date().toLocaleDateString('de-DE'),
-    version: 'v7.2',
+    version: 'v7.3',
     mittagessen: recipes,
     vesper: vesperRecipes
   };
@@ -605,25 +609,84 @@ function saveRecipe(ctx){
   saveAll();backToList(ctx);
 }
 function addManualItem(){const name=document.getElementById('new-item').value.trim();if(!name)return;const amount=document.getElementById('new-amount').value.trim();shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name,amount,source:'Manuell',checked:false});document.getElementById('new-item').value='';document.getElementById('new-amount').value='';saveAll();renderShopping();}
+function addWeekToShopping(){
+  const plan=weekPlan[`week${currentWocheTab}`]||{};
+  if(!Object.keys(plan).length){toast('⚠️ Wochenplan ist leer!');return;}
+  const seen=new Set();
+  Object.values(plan).forEach(r=>{if(r&&!seen.has(r.id)){r.ingredients.forEach(ing=>shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name:ing.name,amount:ing.amount,source:r.name,checked:false}));seen.add(r.id);}});
+  saveAll();toast(`✓ Zutaten Woche ${currentWocheTab} zur Einkaufsliste!`);
+}
+function addVesperToShopping(){
+  if(!Object.keys(vesperPlan).length){toast('⚠️ Vesperplan ist leer!');return;}
+  const seen=new Set();
+  Object.values(vesperPlan).forEach(r=>{if(r&&!seen.has(r.id)){r.ingredients.forEach(ing=>shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name:ing.name,amount:ing.amount,source:'Vesper: '+r.name,checked:false}));seen.add(r.id);}});
+  saveAll();toast('✓ Vesper-Zutaten zur Einkaufsliste!');
+}
 function renderShopping(){const unc=shoppingList.filter(x=>!x.checked),chk=shoppingList.filter(x=>x.checked);let html='';if(!shoppingList.length){html=`<div style="text-align:center;padding:48px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">🛒</div><p>Noch nichts auf der Liste.</p></div>`;}else{if(unc.length){html+=`<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;">Zu kaufen (${unc.length})</div>`;html+=unc.map(shopItemHTML).join('');}if(chk.length){html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 9px;"><span style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Erledigt (${chk.length})</span><button class="btn btn-ghost" style="font-size:11px;padding:5px 11px;" onclick="clearChecked()">Löschen</button></div>`;html+=chk.map(shopItemHTML).join('');}}document.getElementById('shopping-list-container').innerHTML=html;}
 function shopItemHTML(item){return`<div class="card" style="display:flex;align-items:center;gap:13px;margin-bottom:9px;padding:13px 15px;opacity:${item.checked?.5:1};"><div class="check-circle ${item.checked?'done':''}" onclick="toggleShop('${item.id}')">${item.checked?'✓':''}</div><div style="flex:1;"><div style="font-size:14px;text-decoration:${item.checked?'line-through':'none'};"><span style="color:var(--accent);font-weight:500;">${escHtml(item.amount)}</span>${item.amount?' ':''} ${escHtml(item.name)}</div><div style="font-size:11px;color:var(--muted);">${escHtml(item.source)}</div></div><button onclick="removeShop('${item.id}')" style="background:none;border:none;color:var(--muted);font-size:20px;padding:2px 4px;line-height:1;">×</button></div>`;}
 function toggleShop(id){const i=shoppingList.find(x=>x.id===id);if(i)i.checked=!i.checked;saveAll();renderShopping();}
 function removeShop(id){shoppingList=shoppingList.filter(x=>x.id!==id);saveAll();renderShopping();}
 function clearChecked(){shoppingList=shoppingList.filter(x=>!x.checked);saveAll();renderShopping();}
+let currentWocheTab=1;
+function showWocheTab(n){
+  currentWocheTab=n;
+  document.getElementById('woche-tab-1').className='sub-btn'+(n===1?' active':'');
+  document.getElementById('woche-tab-2').className='sub-btn'+(n===2?' active':'');
+  renderWeek();
+}
+// Zutaten-Kategorie erkennen
+function detectCategory(r){
+  const text=(r.name+' '+(r.ingredients||[]).map(i=>i.name).join(' ')).toLowerCase();
+  if(/nudel|spaghetti|pasta|penne|rigatoni|lasagne|tagliatelle|fettuccine/.test(text)) return 'nudeln';
+  if(/reis|risotto|paella/.test(text)) return 'reis';
+  if(/kartoffel|pommes|gnocchi|knödel/.test(text)) return 'kartoffeln';
+  if(/suppe|eintopf|brühe/.test(text)) return 'suppe';
+  if(/pizza|flammkuchen/.test(text)) return 'pizza';
+  if(/burger|sandwich|wrap|toast/.test(text)) return 'sandwich';
+  if(/salat/.test(text)) return 'salat';
+  return 'sonstiges';
+}
 function renderWeek(){
-  document.getElementById('week-count').textContent=Object.keys(weekPlan).length+' Mahlzeiten geplant';
-  document.getElementById('week-grid').innerHTML=DAYS.map(day=>{const isWD=WEEKDAYS.includes(day),ds=daySettings[day];const tl=isWD&&ds?(ds.maxMin?`⏱ max ${ds.maxMin} min`:'⏱ beliebig'):'';const r=weekPlan[day];
-    return`<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;"><div style="width:36px;flex-shrink:0;"><div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div>${tl?`<div style="font-size:8px;color:var(--green);">${tl}</div>`:''}</div><div class="week-slot ${slotClass(r?.type)}" style="flex:1;" onclick="openPicker('${day}')"><div style="color:var(--muted);font-size:10px;font-weight:700;">Mittag</div>${r?`<div style="font-size:12px;line-height:1.4;color:var(--text);margin:4px 0;flex:1;font-weight:500;">${typeIcon(r.type)} ${escHtml(r.name)}</div><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearSlot('${day}')" style="background:none;border:none;color:var(--muted);font-size:16px;padding:0;line-height:1;">×</button></div>`:`<div style="font-size:22px;color:var(--border);text-align:center;margin:auto;">+</div>`}</div></div>`;
+  const plan=weekPlan[`week${currentWocheTab}`]||{};
+  document.getElementById('week-grid').innerHTML=DAYS.map(day=>{
+    const ds=daySettings[day],isWD=WEEKDAYS.includes(day);
+    const tl=isWD&&ds?(ds.maxMin?`⏱ max ${ds.maxMin} min`:''):'';
+    const r=plan[day];
+    return`<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;flex-shrink:0;"><div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div>${tl?`<div style="font-size:8px;color:var(--green);">${tl}</div>`:''}</div>
+      <div class="week-slot ${slotClass(r?.type)}" style="flex:1;" onclick="openPicker('${day}',${currentWocheTab})">
+        <div style="color:var(--muted);font-size:10px;font-weight:700;">Mittag</div>
+        ${r?`<div style="font-size:12px;line-height:1.4;color:var(--text);margin:4px 0;flex:1;font-weight:500;">${typeIcon(r.type)} ${escHtml(r.name)}</div>
+             <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearSlot('${day}',${currentWocheTab})" style="background:none;border:none;color:var(--muted);font-size:16px;padding:0;line-height:1;">×</button></div>`
+          :`<div style="font-size:22px;color:var(--border);text-align:center;margin:auto;">+</div>`}
+      </div>
+    </div>`;
   }).join('');
 }
-function clearSlot(day){delete weekPlan[day];saveAll();renderWeek();}
+function clearSlot(day,week){delete weekPlan[`week${week||currentWocheTab}`][day];saveAll();renderWeek();}
 function renderVesper(){
-  document.getElementById('vesper-count').textContent=Object.keys(vesperPlan).length+' Vesper geplant';
-  document.getElementById('vesper-grid').innerHTML=WEEKDAYS.map(day=>{const r=vesperPlan[day];
-    return`<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;"><div style="width:36px;flex-shrink:0;"><div style="font-size:12px;font-weight:700;color:var(--vesper);text-transform:uppercase;">${day}</div></div><div class="week-slot ${r?'vesper-slot':''}" style="flex:1;" onclick="openVesperPicker('${day}')"><div style="color:var(--muted);font-size:10px;font-weight:700;">Vesper</div>${r?`<div style="font-size:12px;line-height:1.4;color:var(--text);margin:4px 0;flex:1;font-weight:500;">${typeIcon(r.type)} ${escHtml(r.name)}</div><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearVesperSlot('${day}')" style="background:none;border:none;color:var(--muted);font-size:16px;padding:0;line-height:1;">×</button></div>`:`<div style="font-size:22px;color:var(--border);text-align:center;margin:auto;">+</div>`}</div></div>`;
+  document.getElementById('vesper-grid').innerHTML=WEEKDAYS.map(day=>{
+    const rs=vesperPlan[day+'-salzig'], rs2=vesperPlan[day+'-suess'];
+    return`<div style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:var(--vesper);text-transform:uppercase;margin-bottom:6px;">${day}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="week-slot ${rs?'vesper-slot':''}" onclick="openVesperPicker('${day}','salzig')">
+          <div style="color:var(--muted);font-size:9px;font-weight:700;">🧀 Salzig</div>
+          ${rs?`<div style="font-size:11px;line-height:1.3;color:var(--text);margin:3px 0;flex:1;">${typeIcon(rs.type)} ${escHtml(rs.name)}</div>
+               <button onclick="event.stopPropagation();clearVesperSlot('${day}','salzig')" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;align-self:flex-end;line-height:1;">×</button>`
+            :`<div style="font-size:18px;color:var(--border);text-align:center;margin:auto;">+</div>`}
+        </div>
+        <div class="week-slot ${rs2?'vesper-slot':''}" onclick="openVesperPicker('${day}','suess')">
+          <div style="color:var(--muted);font-size:9px;font-weight:700;">🍰 Süß</div>
+          ${rs2?`<div style="font-size:11px;line-height:1.3;color:var(--text);margin:3px 0;flex:1;">${typeIcon(rs2.type)} ${escHtml(rs2.name)}</div>
+                <button onclick="event.stopPropagation();clearVesperSlot('${day}','suess')" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;align-self:flex-end;line-height:1;">×</button>`
+            :`<div style="font-size:18px;color:var(--border);text-align:center;margin:auto;">+</div>`}
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
-function clearVesperSlot(day){delete vesperPlan[day];saveAll();renderVesper();}
+function clearVesperSlot(day,kat){delete vesperPlan[day+'-'+(kat||'salzig')];saveAll();renderVesper();}
 function openAutoPlan(){
   const counts=Object.fromEntries(Object.keys(TYPES).map(t=>[t,recipes.filter(r=>r.type===t).length]));
   const modal=document.getElementById('autoplan-modal');modal.style.display='block';
@@ -633,28 +696,59 @@ function closeAutoPlan(){document.getElementById('autoplan-modal').style.display
 function updateDayTime(day,val){const n=parseInt(val);daySettings[day]={maxMin:(val===''||isNaN(n))?null:n};saveAll();const btn=document.querySelector(`[onclick="clearDayTime('${day}')"]`);if(btn)btn.className='time-any-btn'+(daySettings[day].maxMin?'':' active');}
 function clearDayTime(day){daySettings[day]={maxMin:null};saveAll();const inp=document.getElementById('dt-'+day);if(inp)inp.value='';const btn=document.querySelector(`[onclick="clearDayTime('${day}')"]`);if(btn)btn.className='time-any-btn active';}
 function runAutoPlan(){
-  const counts={};let total=0;for(const t of Object.keys(TYPES)){counts[t]=parseInt(document.getElementById('plan-'+t).value)||0;total+=counts[t];}
+  const counts={};let total=0;
+  for(const t of Object.keys(TYPES)){counts[t]=parseInt(document.getElementById('plan-'+t).value)||0;total+=counts[t];}
   const errEl=document.getElementById('plan-error');
-  if(total>5){errEl.style.display='block';errEl.textContent='⚠️ Maximal 5 Gerichte (Mo–Fr).';return;}
+  if(total>5){errEl.style.display='block';errEl.textContent='⚠️ Maximal 5 Gerichte pro Woche (Mo–Fr).';return;}
   if(total===0){errEl.style.display='block';errEl.textContent='⚠️ Bitte mindestens 1 Gericht wählen.';return;}
   for(const[t,n]of Object.entries(counts)){if(n>0&&recipes.filter(r=>r.type===t).length===0){errEl.style.display='block';errEl.textContent=`⚠️ Keine ${TYPES[t].label}-Rezepte vorhanden!`;return;}}
-  const shuffled=[...WEEKDAYS].sort(()=>Math.random()-.5);let idx=0;const assignments=[];
-  for(const[t,n]of Object.entries(counts)){for(let i=0;i<n;i++)assignments.push({day:shuffled[idx++],type:t});}
-  let skipped=0;function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
-  for(const{day,type}of assignments){const maxMin=daySettings[day]?.maxMin;let pool=recipes.filter(r=>r.type===type);if(maxMin){const f=pool.filter(r=>{const m=parseMinutes(r.time);return m===null||m<=maxMin;});if(f.length>0)pool=f;else skipped++;}weekPlan[day]=pick(pool);}
-  saveAll();closeAutoPlan();renderWeek();toast(skipped>0?`✓ Plan erstellt! (${skipped} über Zeitlimit)`:`✓ ${total} Gerichte geplant!`);
+  function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+  let totalPlanned=0;
+  for(const week of[1,2]){
+    if(!weekPlan[`week${week}`])weekPlan[`week${week}`]={};
+    const usedIds=new Set();const usedCats=new Set();
+    const shuffled=[...WEEKDAYS].sort(()=>Math.random()-.5);
+    let idx=0;const assignments=[];
+    for(const[t,n]of Object.entries(counts)){for(let i=0;i<n;i++)assignments.push({day:shuffled[idx++],type:t});}
+    for(const{day,type}of assignments){
+      const maxMin=daySettings[day]?.maxMin;
+      let pool=recipes.filter(r=>r.type===type&&!usedIds.has(r.id));
+      const poolByCat=pool.filter(r=>!usedCats.has(detectCategory(r)));
+      if(poolByCat.length>0)pool=poolByCat;
+      if(maxMin){const f=pool.filter(r=>{const m=parseMinutes(r.time);return m===null||m<=maxMin;});if(f.length>0)pool=f;}
+      if(pool.length===0)pool=recipes.filter(r=>r.type===type);
+      const chosen=pick(pool);
+      weekPlan[`week${week}`][day]=chosen;
+      usedIds.add(chosen.id);usedCats.add(detectCategory(chosen));
+      totalPlanned++;
+    }
+  }
+  saveAll();closeAutoPlan();renderWeek();toast(`✓ ${totalPlanned} Gerichte für 2 Wochen geplant!`);
 }
 function openVesperPlan(){
   const modal=document.getElementById('vesperplan-modal');modal.style.display='block';
   modal.innerHTML=`<div class="modal-overlay" onclick="closeVesperPlan()"><div class="modal-box" onclick="event.stopPropagation()"><div class="serif" style="font-size:20px;margin-bottom:4px;">🍎 Vesperplan erstellen</div><p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Vesper Mo–Fr automatisch befüllen<br>${vesperRecipes.length} Vesper-Rezepte verfügbar</p><div class="plan-row"><label>Anzahl Tage befüllen</label><input type="number" id="plan-vesper-n" value="5" min="1" max="5"></div><div id="vesper-plan-error" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none;"></div><button class="btn btn-primary" style="width:100%;margin-bottom:10px;" onclick="runVesperPlan()">Plan erstellen 🎲</button><button class="btn btn-ghost" style="width:100%;" onclick="closeVesperPlan()">Abbrechen</button></div></div>`;
 }
 function closeVesperPlan(){document.getElementById('vesperplan-modal').style.display='none';}
-function runVesperPlan(){const n=parseInt(document.getElementById('plan-vesper-n').value)||5;const errEl=document.getElementById('vesper-plan-error');if(vesperRecipes.length===0){errEl.style.display='block';errEl.textContent='⚠️ Keine Vesper-Rezepte vorhanden!';return;}const shuffled=[...WEEKDAYS].sort(()=>Math.random()-.5).slice(0,n);function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}shuffled.forEach(day=>{vesperPlan[day]=pick(vesperRecipes);});saveAll();closeVesperPlan();renderVesper();toast(`✓ ${n} Vesper geplant!`);}
-function openPicker(day){const maxMin=daySettings[day]?.maxMin;const modal=document.getElementById('picker-modal');modal.style.display='block';modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()"><div class="serif" style="font-size:19px;margin-bottom:4px;">Rezept wählen</div><p style="font-size:12px;color:var(--muted);margin-bottom:16px;">${day} · Mittag${maxMin?` · <span style="color:var(--green)">⏱ max ${maxMin} min</span>`:''}</p>${recipes.length?recipes.map(r=>{const mins=parseMinutes(r.time),ot=maxMin&&mins!==null&&mins>maxMin;return`<div class="card recipe-card" style="cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:13px;${ot?'opacity:.55':''}" onclick="assignSlot('${day}','${r.id}')"><div style="font-size:24px;">${typeIcon(r.type)}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${escHtml(r.name)}</div><div style="font-size:11px;color:${ot?'var(--red)':'var(--muted)'};">${r.time}${ot?' ⚠️':''} · ${r.servings} Port.</div></div>${typeBadge(r.type)}</div>`;}).join(''):`<p style="color:var(--muted);text-align:center;padding:20px;">Noch keine Rezepte.</p>`}<button class="btn btn-ghost" style="width:100%;margin-top:10px;" onclick="closePicker()">Abbrechen</button></div></div>`;}
+function runVesperPlan(){
+  const n=parseInt(document.getElementById('plan-vesper-n').value)||5;
+  const errEl=document.getElementById('vesper-plan-error');
+  const salzige=vesperRecipes.filter(r=>(r.vesperKat||'salzig')==='salzig');
+  const suesse=vesperRecipes.filter(r=>(r.vesperKat||'salzig')==='suess');
+  if(salzige.length===0&&suesse.length===0){errEl.style.display='block';errEl.textContent='⚠️ Keine Vesper-Rezepte vorhanden!';return;}
+  const shuffled=[...WEEKDAYS].sort(()=>Math.random()-.5).slice(0,n);
+  function pick(arr){return arr.length?arr[Math.floor(Math.random()*arr.length)]:null;}
+  shuffled.forEach(day=>{
+    if(salzige.length)vesperPlan[day+'-salzig']=pick(salzige);
+    if(suesse.length)vesperPlan[day+'-suess']=pick(suesse);
+  });
+  saveAll();closeVesperPlan();renderVesper();toast(`✓ Vesper für ${n} Tage geplant!`);
+}
+function openPicker(day,week){week=week||currentWocheTab;const maxMin=daySettings[day]?.maxMin;const usedInWeek=Object.values(weekPlan[`week${week}`]||{}).map(r=>r?.id);const modal=document.getElementById('picker-modal');modal.style.display='block';modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()"><div class="serif" style="font-size:19px;margin-bottom:4px;">Rezept wählen</div><p style="font-size:12px;color:var(--muted);margin-bottom:16px;">${day} · Woche ${week}${maxMin?` · <span style="color:var(--green)">⏱ max ${maxMin} min</span>`:''}</p>${recipes.length?recipes.map(r=>{const mins=parseMinutes(r.time),ot=maxMin&&mins!==null&&mins>maxMin,used=usedInWeek.includes(r.id);return`<div class="card recipe-card" style="cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:13px;${ot||used?'opacity:.55':''}" onclick="assignSlot('${day}',${week},'${r.id}')"><div style="font-size:24px;">${typeIcon(r.type)}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${escHtml(r.name)}</div><div style="font-size:11px;color:${ot?'var(--red)':used?'var(--muted)':'var(--muted)'};">${r.time}${ot?' ⚠️':''}${used?' · bereits diese Woche':''}</div></div>${typeBadge(r.type)}</div>`;}).join(''):`<p style="color:var(--muted);text-align:center;padding:20px;">Noch keine Rezepte.</p>`}<button class="btn btn-ghost" style="width:100%;margin-top:10px;" onclick="closePicker()">Abbrechen</button></div></div>`;}
 function closePicker(){document.getElementById('picker-modal').style.display='none';}
-function assignSlot(day,rid){weekPlan[day]=recipes.find(x=>x.id===rid);saveAll();closePicker();renderWeek();}
-function openVesperPicker(day){const modal=document.getElementById('picker-modal');modal.style.display='block';modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()"><div class="serif" style="font-size:19px;margin-bottom:4px;">Vesper wählen</div><p style="font-size:12px;color:var(--muted);margin-bottom:16px;">${day}</p>${vesperRecipes.length?vesperRecipes.map(r=>`<div class="card recipe-card" style="cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:13px;" onclick="assignVesperSlot('${day}','${r.id}')"><div style="font-size:24px;">${typeIcon(r.type)}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${escHtml(r.name)}</div><div style="font-size:11px;color:var(--muted);">${r.time} · ${r.servings} Port.</div></div>${typeBadge(r.type)}</div>`).join(''):`<p style="color:var(--muted);text-align:center;padding:20px;">Noch keine Vesper-Rezepte.<br><span style="font-size:11px;">📖 Rezepte → Vesper → Hinzufügen</span></p>`}<button class="btn btn-ghost" style="width:100%;margin-top:10px;" onclick="closePicker()">Abbrechen</button></div></div>`;}
-function assignVesperSlot(day,rid){vesperPlan[day]=vesperRecipes.find(x=>x.id===rid);saveAll();closePicker();renderVesper();}
+function assignSlot(day,week,rid){if(!weekPlan[`week${week}`])weekPlan[`week${week}`]={};weekPlan[`week${week}`][day]=recipes.find(x=>x.id===rid);saveAll();closePicker();renderWeek();}
+function openVesperPicker(day,kat){kat=kat||'salzig';const pool=vesperRecipes.filter(r=>(r.vesperKat||'salzig')===kat);const modal=document.getElementById('picker-modal');modal.style.display='block';modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()"><div class="serif" style="font-size:19px;margin-bottom:4px;">${kat==='salzig'?'🧀 Salzig':'🍰 Süß'} wählen</div><p style="font-size:12px;color:var(--muted);margin-bottom:16px;">${day}</p>${pool.length?pool.map(r=>`<div class="card recipe-card" style="cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:13px;" onclick="assignVesperSlot('${day}','${kat}','${r.id}')"><div style="font-size:24px;">${typeIcon(r.type)}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${escHtml(r.name)}</div><div style="font-size:11px;color:var(--muted);">${r.time} · ${r.servings} Port.</div></div>${typeBadge(r.type)}</div>`).join(''):`<p style="color:var(--muted);text-align:center;padding:20px;">Keine ${kat==='salzig'?'salzigen':'süßen'} Vesper-Rezepte.<br><span style="font-size:11px;">📖 Rezepte → Vesper → Hinzufügen</span></p>`}<button class="btn btn-ghost" style="width:100%;margin-top:10px;" onclick="closePicker()">Abbrechen</button></div></div>`;}
+function assignVesperSlot(day,kat,rid){vesperPlan[day+'-'+(kat||'salzig')]=vesperRecipes.find(x=>x.id===rid);saveAll();closePicker();renderVesper();}
 </script>
 </body>
 </html>
