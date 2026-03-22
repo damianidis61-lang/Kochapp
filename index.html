@@ -101,9 +101,11 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
       <p style="color:var(--muted);font-size:13px;margin-top:5px;">Deine persönliche Küchen-Assistentin mit KI</p>
     </div>
     <label class="label">Anthropic API-Key</label>
-    <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" style="margin-bottom:8px;font-size:13px;">
-    <p style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.6;">🔒 Wird nur lokal gespeichert — nie übertragen.<br>Key holen: <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--accent);text-decoration:none;">console.anthropic.com/keys</a></p>
-    <div id="api-error" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none;">⚠️ Bitte einen gültigen API-Key eingeben.</div>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" style="margin-bottom:12px;font-size:13px;">
+    <label class="label">JSONBin API-Key</label>
+    <input type="password" id="jb-key-input" placeholder="$2a$10$…" style="margin-bottom:8px;font-size:13px;">
+    <p style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.6;">🔒 Beide Keys werden nur lokal gespeichert.<br>Anthropic: <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--accent);text-decoration:none;">console.anthropic.com/keys</a></p>
+    <div id="api-error" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none;">⚠️ Bitte beide API-Keys eingeben.</div>
     <button class="btn btn-primary" style="width:100%;margin-top:10px;font-size:15px;" onclick="startApp()">App starten →</button>
     <div class="divider"></div>
     <p style="font-size:11px;color:var(--muted);text-align:center;line-height:1.7;">Gehostet auf Netlify · Als App auf Homescreen speichern</p>
@@ -112,7 +114,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.6</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v6.7</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -195,32 +197,36 @@ const slotClass=t=>t?(TYPES[t]||TYPES.vegetarian).css+'-slot':'';
 let API_KEY='',recipes=[],vesperRecipes=[],shoppingList=[],weekPlan={},vesperPlan={},formData={},formContext='mittag',currentTab='vesper',currentSubTab='mittag';
 const DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'],WEEKDAYS=['Mo','Di','Mi','Do','Fr'];
 let daySettings={Mo:{maxMin:40},Di:{maxMin:40},Mi:{maxMin:40},Do:{maxMin:40},Fr:{maxMin:null}};
-const SK={recipes:'kochapp-recipes',vesper:'kochapp-vesper-recipes',shopping:'kochapp-shopping',week:'kochapp-week',vesperplan:'kochapp-vesperplan',settings:'kochapp-daysettings'};
-// Rezepte & Vesper = shared (gemeinsam pro Key), Rest = privat
-const SHARED_KEYS=['kochapp-recipes','kochapp-vesper-recipes'];
-async function storageSave(k,v){const shared=SHARED_KEYS.includes(k);try{await window.storage.set(k,JSON.stringify(v),shared);}catch(e){localStorage.setItem(k,JSON.stringify(v));}}
-async function storageLoad(k){const shared=SHARED_KEYS.includes(k);try{const r=await window.storage.get(k,shared);return r?JSON.parse(r.value):null;}catch(e){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e2){return null;}}}
 function setSyncStatus(s,t){const el=document.getElementById('sync-status');if(!el)return;el.innerHTML=`<span class="sync-dot ${s}"></span>${t}`;}
 async function saveAll(){
   setSyncStatus('busy','Speichert…');
   try{
-    await Promise.all([storageSave(SK.recipes,recipes),storageSave(SK.vesper,vesperRecipes),storageSave(SK.shopping,shoppingList),storageSave(SK.week,weekPlan),storageSave(SK.vesperplan,vesperPlan),storageSave(SK.settings,daySettings)]);
-    localStorage.setItem(SK.recipes,JSON.stringify(recipes));localStorage.setItem(SK.vesper,JSON.stringify(vesperRecipes));localStorage.setItem(SK.shopping,JSON.stringify(shoppingList));localStorage.setItem(SK.week,JSON.stringify(weekPlan));localStorage.setItem(SK.vesperplan,JSON.stringify(vesperPlan));localStorage.setItem(SK.settings,JSON.stringify(daySettings));
+    const data={mittag:recipes,vesper:vesperRecipes};
+    await jbSave(data);
+    localStorage.setItem('ka_shopping',JSON.stringify(shoppingList));
+    localStorage.setItem('ka_week',JSON.stringify(weekPlan));
+    localStorage.setItem('ka_vesperplan',JSON.stringify(vesperPlan));
+    localStorage.setItem('ka_daysettings',JSON.stringify(daySettings));
     setSyncStatus('ok','Gespeichert');setTimeout(()=>{const el=document.getElementById('sync-status');if(el)el.innerHTML='';},2000);
   }catch(e){setSyncStatus('err','Fehler');}
 }
 async function loadAll(){
-  let r=await storageLoad(SK.recipes),vr=await storageLoad(SK.vesper),s=await storageLoad(SK.shopping),w=await storageLoad(SK.week),vp=await storageLoad(SK.vesperplan),d=await storageLoad(SK.settings);
-  if(!r){try{r=JSON.parse(localStorage.getItem('ka_recipes'));}catch(e){}}
-  if(!s){try{s=JSON.parse(localStorage.getItem('ka_shopping'));}catch(e){}}
-  if(!w){try{w=JSON.parse(localStorage.getItem('ka_week'));}catch(e){}}
-  if(!d){try{d=JSON.parse(localStorage.getItem('ka_daysettings'));}catch(e){}}
-  recipes=r||defaultRecipes();vesperRecipes=vr||defaultVesperRecipes();shoppingList=s||[];weekPlan=w||{};vesperPlan=vp||{};if(d)daySettings=d;
+  const jbData=await jbLoad();
+  if(jbData&&jbData.mittag){recipes=jbData.mittag;vesperRecipes=jbData.vesper||[];}
+  else{recipes=defaultRecipes();vesperRecipes=defaultVesperRecipes();}
+  try{shoppingList=JSON.parse(localStorage.getItem('ka_shopping'))||[];}catch(e){shoppingList=[];}
+  try{weekPlan=JSON.parse(localStorage.getItem('ka_week'))||{};}catch(e){weekPlan={};}
+  try{vesperPlan=JSON.parse(localStorage.getItem('ka_vesperplan'))||{};}catch(e){vesperPlan={};}
+  try{const d=JSON.parse(localStorage.getItem('ka_daysettings'));if(d)daySettings=d;}catch(e){}
 }
 function defaultRecipes(){return[{id:'r1',name:'Spaghetti Carbonara',image:null,time:'25 min',servings:2,type:'meat',tags:['Pasta','Schnell'],ingredients:[{name:'Spaghetti',amount:'200g'},{name:'Pancetta',amount:'100g'},{name:'Eier',amount:'2 Stück'},{name:'Parmesan',amount:'60g'},{name:'Pfeffer',amount:'n. B.'}],steps:['Spaghetti in Salzwasser al dente kochen.','Pancetta knusprig braten.','Eier mit Parmesan verquirlen.','Pasta vom Herd, Ei-Mix unterrühren.','Mit Pfeffer servieren.']},{id:'r2',name:'Avocado Toast',image:null,time:'10 min',servings:1,type:'vegetarian',tags:['Schnell'],ingredients:[{name:'Vollkornbrot',amount:'2 Scheiben'},{name:'Avocado',amount:'1 Stück'},{name:'Zitronensaft',amount:'1 EL'},{name:'Chiliflocken',amount:'Prise'}],steps:['Brot rösten.','Avocado zerdrücken und würzen.','Auf Toast verteilen.','Mit Chili bestreuen.']},{id:'r3',name:'Lachsfilet mit Gemüse',image:null,time:'30 min',servings:2,type:'fish',tags:['Gesund'],ingredients:[{name:'Lachsfilet',amount:'300g'},{name:'Zucchini',amount:'1 Stück'},{name:'Zitrone',amount:'1/2'},{name:'Olivenöl',amount:'2 EL'},{name:'Dill',amount:'n. B.'}],steps:['Ofen auf 200°C vorheizen.','Gemüse schneiden und auf Backblech legen.','Lachs würzen und mit Zitrone beträufeln.','Alles 20 Min. backen.','Mit frischem Dill servieren.']}];}
 function defaultVesperRecipes(){return[{id:'v1',name:'Apfel mit Käse',image:null,time:'5 min',servings:1,type:'vegetarian',tags:['Schnell','Kinder'],ingredients:[{name:'Apfel',amount:'1 Stück'},{name:'Käse',amount:'2 Scheiben'}],steps:['Apfel in Spalten schneiden.','Mit Käse servieren.']}];}
-window.onload=async()=>{await loadAll();const k=localStorage.getItem('ka_key');if(k){API_KEY=k;launchApp();}};
-function startApp(){const k=document.getElementById('api-key-input').value.trim();if(!k.startsWith('sk-')){document.getElementById('api-error').style.display='block';return;}API_KEY=k;localStorage.setItem('ka_key',k);launchApp();}
+const JSONBIN_ID='69bfcf84aa77b81da909b064';
+let JB_KEY='';
+async function jbLoad(){try{const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`,{headers:{'X-Master-Key':JB_KEY,'X-Bin-Meta':false}});if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+async function jbSave(data){try{await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':JB_KEY},body:JSON.stringify(data)});}catch(e){console.warn('JSONBin save failed',e);}}
+window.onload=async()=>{const k=localStorage.getItem('ka_key');const jk=localStorage.getItem('ka_jb');if(k&&jk){API_KEY=k;JB_KEY=jk;await loadAll();launchApp();}};
+function startApp(){const k=document.getElementById('api-key-input').value.trim();const jk=document.getElementById('jb-key-input').value.trim();if(!k.startsWith('sk-')||!jk){document.getElementById('api-error').style.display='block';return;}API_KEY=k;JB_KEY=jk;localStorage.setItem('ka_key',k);localStorage.setItem('ka_jb',jk);loadAll().then(()=>launchApp());}
 function launchApp(){document.getElementById('api-screen').style.display='none';document.getElementById('app').style.display='flex';document.getElementById('app').style.flexDirection='column';renderVesper();}
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
@@ -262,7 +268,7 @@ function copyKey(){
 function exportJSON(){
   const data={
     exportDate: new Date().toLocaleDateString('de-DE'),
-    version: 'v6.6',
+    version: 'v6.7',
     mittagessen: recipes,
     vesper: vesperRecipes
   };
