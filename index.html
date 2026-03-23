@@ -114,92 +114,137 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.3</span></h1>
+      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.4</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
       </div>
     </div>
-    <nav>
-      <button class="nav-btn active" id="nav-vesper" onclick="showTab('vesper')"><span class="ni">🍎</span>Vesper</button>
-      <button class="nav-btn" id="nav-woche" onclick="showTab('woche')"><span class="ni">📅</span>Wochenplan</button>
-    </nav>
   </header>
   <main>
-    <!-- VESPER Mo-Fr mit Salzig+Süß -->
-    <div id="page-vesper" class="page active">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <span style="color:var(--muted);font-size:13px;">Vesper Mo–Fr</span>
-        <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openVesperPlan()">Planen →</button>
-      </div>
-      <div id="vesper-grid"></div>
-    </div>
-    <!-- WOCHENPLAN 2 Wochen -->
-    <div id="page-woche" class="page">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <span style="color:var(--muted);font-size:13px;">Mittag · 2 Wochen</span>
-        <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;white-space:nowrap;" onclick="openAutoPlan()">Planen →</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
-        <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
-      </div>
-      <div id="week-grid"></div>
-    </div>
-    <!-- REZEPTE mit Unterregisterkarten -->
-    <div id="page-rezepte" class="page">
-      <div class="sub-nav">
-        <button class="sub-btn active" id="sub-mittag" onclick="showSubTab('mittag')">🍽️ Mittagessen</button>
-        <button class="sub-btn" id="sub-vesper-r" onclick="showSubTab('vesper-r')">🍎 Vesper</button>
-      </div>
-      <div id="sub-page-mittag">
-        <div id="mittag-toolbar" style="margin-bottom:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <span id="recipe-count" style="color:var(--muted);font-size:13px;"></span>
-
+    <!-- STARTSEITE -->
+    <div id="page-start" class="page active">
+      <div style="display:flex;flex-direction:column;gap:16px;padding-top:24px;">
+        <button onclick="showMain('wochenplan')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
+          <div style="font-size:52px;">📅</div>
+          <div>
+            <div class="serif" style="font-size:22px;color:var(--accent);margin-bottom:4px;">Wochenplan</div>
+            <div style="font-size:13px;color:var(--muted);">Mittag & Vesper planen · Einkauf</div>
           </div>
-          <input type="text" id="recipe-search" placeholder="🔍 Suchen z.B. Nudeln, Zucchini…" oninput="filterRecipes(this.value)" style="margin-bottom:0;">
-        </div>
-        <div id="recipe-list"></div>
-        <div id="recipe-detail" style="display:none;"></div>
-        <div id="add-recipe-form" style="display:none;"></div>
-      </div>
-      <div id="sub-page-vesper-r" style="display:none;">
-        <div id="vesper-r-toolbar" style="margin-bottom:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <span id="vesper-recipe-count" style="color:var(--muted);font-size:13px;"></span>
-
+        </button>
+        <button onclick="showMain('kochbuch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
+          <div style="font-size:52px;">📖</div>
+          <div>
+            <div class="serif" style="font-size:22px;color:var(--accent);margin-bottom:4px;">Kochbuch</div>
+            <div style="font-size:13px;color:var(--muted);">Rezepte durchstöbern & hinzufügen</div>
           </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- WOCHENPLAN -->
+    <div id="page-wochenplan" class="page">
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="sub-btn active" id="wp-tab-mittag" onclick="showWpTab('mittag')">🍽️ Mittag</button>
+        <button class="sub-btn" id="wp-tab-vesper" onclick="showWpTab('vesper')">🍎 Vesper</button>
+        <button class="sub-btn" id="wp-tab-einkauf" onclick="showWpTab('einkauf')">🛒 Einkauf</button>
+      </div>
+      <div id="wp-mittag">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <div style="display:flex;gap:8px;">
-            <button class="sub-btn active" id="vesper-col-salzig" onclick="setVesperCol('salzig')">🧀 Salzig</button>
-            <button class="sub-btn" id="vesper-col-suess" onclick="setVesperCol('suess')">🍰 Süß</button>
+            <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
+            <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
           </div>
+          <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openAutoPlan()">Planen →</button>
         </div>
-        <div id="vesper-recipe-list"></div>
-        <div id="vesper-recipe-detail" style="display:none;"></div>
-        <div id="add-vesper-recipe-form" style="display:none;"></div>
+        <div id="week-grid"></div>
+      </div>
+      <div id="wp-vesper" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="color:var(--muted);font-size:13px;">Vesper Mo–Fr</span>
+          <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openVesperPlan()">Planen →</button>
+        </div>
+        <div id="vesper-grid"></div>
+      </div>
+      <div id="wp-einkauf" style="display:none;">
+        <div class="card" style="margin-bottom:16px;">
+          <h3 style="font-size:14px;margin-bottom:10px;font-weight:600;">➕ Artikel hinzufügen</h3>
+          <div style="display:grid;grid-template-columns:1fr 90px;gap:8px;margin-bottom:8px;">
+            <input type="text" id="new-item" placeholder="Artikel" onkeydown="if(event.key==='Enter')addManualItem()">
+            <input type="text" id="new-amount" placeholder="Menge" onkeydown="if(event.key==='Enter')addManualItem()">
+          </div>
+          <button class="btn btn-primary" style="width:100%;" onclick="addManualItem()">Hinzufügen</button>
+        </div>
+        <div id="shopping-list-container"></div>
       </div>
     </div>
-    <!-- EINKAUF -->
-    <div id="page-einkauf" class="page">
-      <div class="card" style="margin-bottom:16px;">
-        <h3 style="font-size:14px;margin-bottom:10px;font-weight:600;">➕ Artikel hinzufügen</h3>
-        <div style="display:grid;grid-template-columns:1fr 90px;gap:8px;margin-bottom:8px;">
-          <input type="text" id="new-item" placeholder="Artikel" onkeydown="if(event.key==='Enter')addManualItem()">
-          <input type="text" id="new-amount" placeholder="Menge" onkeydown="if(event.key==='Enter')addManualItem()">
+
+    <!-- KOCHBUCH -->
+    <div id="page-kochbuch" class="page">
+      <div id="kb-kategorien">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <button onclick="showKategorie('fleisch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🥩</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
+          </button>
+          <button onclick="showKategorie('nudeln')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🍜</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Nudelgerichte</div>
+          </button>
+          <button onclick="showKategorie('reis')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🍚</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Reisgerichte</div>
+          </button>
+          <button onclick="showKategorie('suppen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🥣</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Suppen</div>
+          </button>
+          <button onclick="showKategorie('grillen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🔥</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Grillen</div>
+          </button>
+          <button onclick="showKategorie('backen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🎂</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Backen</div>
+          </button>
+          <button onclick="showKategorie('ofen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🫕</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Ofengerichte</div>
+          </button>
+          <button onclick="showKategorie('vesper-kb')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:36px;">🍎</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Vesper</div>
+          </button>
         </div>
-        <button class="btn btn-primary" style="width:100%;" onclick="addManualItem()">Hinzufügen</button>
       </div>
-      <div id="shopping-list-container"></div>
+      <div id="kb-rezepte" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <button class="btn btn-ghost" style="padding:8px 14px;" onclick="backToKategorien()">← Zurück</button>
+          <h2 class="serif" id="kb-kategorie-titel" style="font-size:20px;color:var(--accent);flex:1;"></h2>
+          <button class="btn btn-primary" id="kb-add-btn" style="font-size:12px;padding:8px 14px;" onclick="showAddFromKategorie()">+ Hinzufügen</button>
+        </div>
+        <input type="text" id="kb-search" placeholder="🔍 Suchen…" oninput="filterKbRecipes(this.value)" style="margin-bottom:14px;">
+        <div id="kb-recipe-list"></div>
+        <div id="kb-recipe-detail" style="display:none;"></div>
+        <div id="kb-add-form" style="display:none;"></div>
+        <div id="kb-vesper-detail" style="display:none;"></div>
+        <div id="kb-add-vesper-form" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Legacy pages (hidden, kept for compatibility) -->
+    <div id="page-rezepte" style="display:none;">
+      <div id="recipe-list"></div>
+      <div id="recipe-detail" style="display:none;"></div>
+      <div id="add-recipe-form" style="display:none;"></div>
+      <div id="vesper-recipe-list"></div>
+      <div id="vesper-recipe-detail" style="display:none;"></div>
+      <div id="add-vesper-recipe-form" style="display:none;"></div>
+      <span id="recipe-count"></span>
+      <span id="vesper-recipe-count"></span>
+      <div id="mittag-toolbar"></div>
+      <div id="vesper-r-toolbar"></div>
+      <div id="sub-page-mittag"></div>
+      <div id="sub-page-vesper-r"></div>
     </div>
   </main>
+
   <div class="bottom-bar">
-    <button class="bottom-btn" id="btn-rezepte" onclick="showTab('rezepte')"><span style="font-size:18px;">📖</span> Rezepte</button>
-    <div id="btn-add-center" style="display:none;flex-direction:column;gap:5px;align-items:center;">
-      <button class="btn btn-primary" id="btn-add-mittag" onclick="showAddRecipe('mittag')" style="font-size:12px;padding:8px 14px;display:none;">+ Mittagessen</button>
-      <button class="btn btn-primary" id="btn-add-vesper-b" onclick="showAddRecipe('vesper')" style="font-size:12px;padding:8px 14px;display:none;">+ Vesper</button>
-    </div>
-    <button class="bottom-btn" id="btn-einkauf" onclick="showTab('einkauf')"><span style="font-size:18px;">🛒</span> Einkauf</button>
+    <button class="bottom-btn" id="btn-home" onclick="goHome()"><span style="font-size:18px;">🏠</span> Start</button>
+    <button class="bottom-btn" id="btn-wochenplan" onclick="showMain('wochenplan')"><span style="font-size:18px;">📅</span> Woche</button>
+    <button class="bottom-btn" id="btn-kochbuch" onclick="showMain('kochbuch')"><span style="font-size:18px;">📖</span> Kochbuch</button>
   </div>
 </div>
 <div id="picker-modal" style="display:none;"></div>
@@ -244,7 +289,239 @@ async function jbLoad(){try{const r=await fetch(`https://api.jsonbin.io/v3/b/${J
 async function jbSave(data){console.log('jbSave called, JB_KEY length:',JB_KEY.length);try{const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':JB_KEY},body:JSON.stringify(data)});console.log('jbSave status:',r.status);}catch(e){console.warn('JSONBin save failed',e);}}
 window.onload=async()=>{const k=localStorage.getItem('ka_key');const jk=localStorage.getItem('ka_jb');if(k&&jk){API_KEY=k;JB_KEY=jk;await loadAll();launchApp();}};
 function startApp(){const k=document.getElementById('api-key-input').value.trim();const jk=document.getElementById('jb-key-input').value.trim();if(!k.startsWith('sk-')||!jk){document.getElementById('api-error').style.display='block';return;}API_KEY=k;JB_KEY=jk;localStorage.setItem('ka_key',k);localStorage.setItem('ka_jb',jk);loadAll().then(()=>launchApp());}
-function launchApp(){document.getElementById('api-screen').style.display='none';document.getElementById('app').style.display='flex';document.getElementById('app').style.flexDirection='column';renderVesper();}
+function launchApp(){
+  document.getElementById('api-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('app').style.flexDirection='column';
+  showPage('start');
+}
+function showPage(page){
+  ['start','wochenplan','kochbuch'].forEach(p=>{
+    const el=document.getElementById('page-'+p);
+    if(el)el.classList.toggle('active',p===page);
+  });
+  // update bottom bar
+  ['btn-home','btn-wochenplan','btn-kochbuch'].forEach(b=>{
+    const el=document.getElementById(b);if(el)el.classList.remove('active');
+  });
+  if(page==='start')document.getElementById('btn-home')?.classList.add('active');
+  if(page==='wochenplan')document.getElementById('btn-wochenplan')?.classList.add('active');
+  if(page==='kochbuch')document.getElementById('btn-kochbuch')?.classList.add('active');
+}
+function goHome(){showPage('start');}
+function showMain(section){
+  showPage(section);
+  if(section==='wochenplan'){showWpTab('mittag');renderWeek();}
+  if(section==='kochbuch'){backToKategorien();}
+}
+function showWpTab(tab){
+  ['mittag','vesper','einkauf'].forEach(t=>{
+    const el=document.getElementById('wp-'+t);if(el)el.style.display=t===tab?'block':'none';
+    const btn=document.getElementById('wp-tab-'+t);if(btn)btn.classList.toggle('active',t===tab);
+  });
+  if(tab==='vesper')renderVesper();
+  if(tab==='einkauf')renderShopping();
+  if(tab==='mittag')renderWeek();
+}
+// Kochbuch navigation
+const KB_CATEGORIES={
+  fleisch:{label:'Fleischgerichte',icon:'🥩',filter:r=>r.type==='meat',ctx:'mittag'},
+  nudeln:{label:'Nudelgerichte',icon:'🍜',filter:r=>detectCategory(r)==='nudeln',ctx:'mittag'},
+  reis:{label:'Reisgerichte',icon:'🍚',filter:r=>detectCategory(r)==='reis',ctx:'mittag'},
+  suppen:{label:'Suppen',icon:'🥣',filter:r=>detectCategory(r)==='suppe',ctx:'mittag'},
+  grillen:{label:'Grillen',icon:'🔥',filter:r=>(r.tags||[]).some(t=>t.toLowerCase().includes('grill')),ctx:'mittag'},
+  backen:{label:'Backen',icon:'🎂',filter:r=>(r.tags||[]).some(t=>t.toLowerCase().includes('back')),ctx:'mittag'},
+  ofen:{label:'Ofengerichte',icon:'🫕',filter:r=>detectCategory(r)==='ofen'||(r.tags||[]).some(t=>t.toLowerCase().includes('ofen')),ctx:'mittag'},
+  'vesper-kb':{label:'Vesper',icon:'🍎',filter:r=>true,ctx:'vesper'},
+};
+let currentKbKat=null;
+function showKategorie(kat){
+  currentKbKat=kat;
+  const cat=KB_CATEGORIES[kat];
+  document.getElementById('kb-kategorien').style.display='none';
+  document.getElementById('kb-rezepte').style.display='block';
+  document.getElementById('kb-kategorie-titel').textContent=cat.icon+' '+cat.label;
+  document.getElementById('kb-search').value='';
+  renderKbRecipes(cat);
+}
+function backToKategorien(){
+  document.getElementById('kb-kategorien').style.display='block';
+  document.getElementById('kb-rezepte').style.display='none';
+  document.getElementById('kb-recipe-detail').style.display='none';
+  document.getElementById('kb-add-form').style.display='none';
+  document.getElementById('kb-vesper-detail').style.display='none';
+  document.getElementById('kb-add-vesper-form').style.display='none';
+  currentKbKat=null;
+}
+function renderKbRecipes(cat){
+  const pool=cat.ctx==='vesper'?vesperRecipes:recipes;
+  const filtered=pool.filter(cat.filter);
+  document.getElementById('kb-recipe-list').innerHTML=filtered.length
+    ?filtered.map(r=>recipeCardHTML(r,cat.ctx==='vesper'?'vesper':'mittag')).join('')
+    :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">${cat.icon}</div><p>Noch keine ${cat.label}.</p></div>`;
+}
+function filterKbRecipes(q){
+  if(!currentKbKat)return;
+  const cat=KB_CATEGORIES[currentKbKat];
+  const pool=cat.ctx==='vesper'?vesperRecipes:recipes;
+  const base=pool.filter(cat.filter);
+  const filtered=q?base.filter(r=>r.name.toLowerCase().includes(q.toLowerCase())||(r.ingredients||[]).some(i=>i.name.toLowerCase().includes(q.toLowerCase()))):base;
+  document.getElementById('kb-recipe-list').innerHTML=filtered.length
+    ?filtered.map(r=>recipeCardHTML(r,cat.ctx==='vesper'?'vesper':'mittag')).join('')
+    :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><p>Keine Ergebnisse für "${q}"</p></div>`;
+}
+function showAddFromKategorie(){
+  if(!currentKbKat)return;
+  const cat=KB_CATEGORIES[currentKbKat];
+  const ctx=cat.ctx==='vesper'?'vesper':'mittag';
+  formContext=ctx;
+  formData={name:'',time:'',servings:'2',tags:'',type:'vegetarian',vesperKat:'salzig',ingredients:[{name:'',amount:''}],steps:[''],image:null};
+  document.getElementById('kb-recipe-list').style.display='none';
+  document.getElementById('kb-recipe-detail').style.display='none';
+  document.getElementById('kb-vesper-detail').style.display='none';
+  const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
+  renderKbAddForm(ctx,formId);
+  document.getElementById(formId).style.display='block';
+}
+function renderKbAddForm(ctx,formId){
+  const isV=ctx==='vesper';
+  document.getElementById(formId).innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 class="serif" style="font-size:22px;">${formData.editMode?(isV?'Vesper bearbeiten':'Rezept bearbeiten'):(isV?'Neues Vesper-Rezept':'Neues Rezept')}</h2>
+      <button class="btn btn-ghost" onclick="backFromKbForm('${ctx}')">Abbrechen</button>
+    </div>
+    <div onclick="document.getElementById('photo-input-kb-${ctx}').click()"
+      style="width:100%;height:120px;border-radius:16px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:16px;overflow:hidden;position:relative;background:${formData.image?`url(${formData.image}) center/cover`:'var(--surface)'};">
+      ${formData.image?`<div style="position:absolute;bottom:8px;right:8px;background:var(--green);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;">✓ KI analysiert</div>`:`<div style="font-size:28px;margin-bottom:4px;">📷</div><div style="font-size:13px;color:var(--muted);">Foto für KI-Analyse</div>`}
+      <div id="ai-overlay-kb-${ctx}" style="display:none;position:absolute;inset:0;background:rgba(245,240,232,.9);align-items:center;justify-content:center;flex-direction:column;gap:10px;"><div class="spinner"></div><div style="font-size:13px;color:var(--accent);font-weight:600;">KI analysiert…</div></div>
+    </div>
+    <input type="file" id="photo-input-kb-${ctx}" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoKb(event,'${ctx}')">
+    <label class="label">Art des Gerichts</label>
+    <div class="type-toggle">
+      <button class="type-btn ${formData.type==='vegetarian'?'sel-veg':''}" onclick="formData.type='vegetarian';renderKbAddForm('${ctx}','${formId}')">🥦 Veg.</button>
+      <button class="type-btn ${formData.type==='meat'?'sel-meat':''}" onclick="formData.type='meat';renderKbAddForm('${ctx}','${formId}')">🥩 Fleisch</button>
+      <button class="type-btn ${formData.type==='fish'?'sel-fish':''}" onclick="formData.type='fish';renderKbAddForm('${ctx}','${formId}')">🐟 Fisch</button>
+    </div>
+    ${isV?`<label class="label">Kategorie</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="type-btn ${(formData.vesperKat||'salzig')==='salzig'?'sel-veg':''}" onclick="formData.vesperKat='salzig';renderKbAddForm('${ctx}','${formId}')">🧀 Salzig</button>
+      <button class="type-btn ${(formData.vesperKat||'salzig')==='suess'?'sel-meat':''}" onclick="formData.vesperKat='suess';renderKbAddForm('${ctx}','${formId}')">🍰 Süß</button>
+    </div>`:''}
+    <label class="label">Rezeptname *</label>
+    <input type="text" id="f-name" value="${escHtml(formData.name)}" placeholder="${isV?'z.B. Apfel mit Käse':'z.B. Spaghetti Bolognese'}" style="margin-bottom:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div><label class="label">Kochzeit</label><input type="text" id="f-time" value="${escHtml(formData.time)}" placeholder="30 min"></div>
+      <div><label class="label">Portionen</label><input type="number" id="f-servings" value="${formData.servings}" min="1"></div>
+    </div>
+    <label class="label">Tags</label>
+    <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:16px;">
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h3 style="font-size:14px;font-weight:600;">🧄 Zutaten</h3>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRowKb('${ctx}','${formId}')">+ Zutat</button>
+      </div>
+      <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx)).join('')}</div>
+    </div>
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h3 style="font-size:14px;font-weight:600;">👩‍🍳 Schritte</h3>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addStepRowKb('${ctx}','${formId}')">+ Schritt</button>
+      </div>
+      <div id="step-rows">${formData.steps.map((s,i)=>stepRowHTML(i,s,ctx)).join('')}</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipeKb('${ctx}','${formId}')">Rezept speichern ✓</button>`;
+}
+function backFromKbForm(ctx){
+  const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
+  document.getElementById(formId).style.display='none';
+  document.getElementById('kb-recipe-list').style.display='';
+  if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
+}
+function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:''});renderKbAddForm(ctx,formId);}
+function addStepRowKb(ctx,formId){syncFields();formData.steps.push('');renderKbAddForm(ctx,formId);}
+function saveRecipeKb(ctx,formId){
+  syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}
+  const r={id:(ctx==='vesper'?'v':'r')+Date.now(),name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
+  if(formData.editMode){
+    if(ctx==='vesper'){const idx=vesperRecipes.findIndex(x=>x.id===r.id);if(idx>=0)vesperRecipes[idx]=r;}
+    else{const idx=recipes.findIndex(x=>x.id===r.id);if(idx>=0)recipes[idx]=r;}
+    toast('✓ Rezept aktualisiert!');
+  } else {
+    if(ctx==='vesper')vesperRecipes.push(r);else recipes.push(r);
+    toast('✓ Rezept gespeichert!');
+  }
+  saveAll();backFromKbForm(ctx);
+}
+async function handlePhotoKb(e,ctx){
+  const file=e.target.files[0];if(!file)return;
+  formData.image=URL.createObjectURL(file);
+  const ov=document.getElementById('ai-overlay-kb-'+ctx);if(ov)ov.style.display='flex';
+  const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
+  const reader=new FileReader();
+  reader.onload=async(ev)=>{
+    const b64=ev.target.result.split(',')[1];
+    try{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:`Analysiere dieses Essensfoto. Antworte NUR mit validem JSON:
+{"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge"}],"steps":["Schritt"]}
+Max 5 Schritte auf Deutsch.`}]}]})});
+      if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
+      if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');if(p.ingredients?.length)formData.ingredients=p.ingredients;if(p.steps?.length)formData.steps=p.steps;
+    }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
+    renderKbAddForm(ctx,formId);
+  };reader.readAsDataURL(file);
+}
+// showRecipeDetail from kochbuch
+function showKbRecipeDetail(id,ctx){
+  const pool=ctx==='vesper'?vesperRecipes:recipes;
+  const r=pool.find(x=>x.id===id);if(!r)return;
+  const base=r.servings||2,factor=1;
+  const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
+  document.getElementById('kb-recipe-list').style.display='none';
+  const det=document.getElementById(detId);det.style.display='block';
+  const dd=TYPES[r.type]||TYPES.vegetarian;
+  det.innerHTML=`<button class="btn btn-ghost" style="margin-bottom:18px;" onclick="backToKbList('${ctx}')">← Zurück</button>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+      <div style="width:72px;height:72px;border-radius:16px;background:${dd.color}22;display:flex;align-items:center;justify-content:center;font-size:42px;flex-shrink:0;">${ctx==='vesper'?'🍎':dd.icon}</div>
+      <div><h2 class="serif" style="font-size:24px;margin-bottom:4px;">${escHtml(r.name)}</h2>
+      <div style="font-size:12px;color:var(--muted);">⏱ ${r.time} &nbsp;·&nbsp; ${dd.label}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">👤 Portionen</div><div style="font-size:11px;color:var(--muted);">Basis: ${base}</div></div>
+      <div class="portion-scaler"><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}')">−</button><div class="portion-num">${base}</div><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}')">+</button></div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">🧄 Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${r.id}','${ctx}',${base})">→ Einkaufsliste</button></div>
+      ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(ing.amount)}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
+    </div>
+    <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">👩‍🍳 Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="editKbRecipe('${r.id}','${ctx}')">✏️ Bearbeiten</button>
+      <button class="btn btn-danger" style="flex:1;" onclick="deleteKbRecipe('${r.id}','${ctx}')">🗑️ Löschen</button>
+    </div>`;
+}
+function backToKbList(ctx){
+  const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
+  document.getElementById(detId).style.display='none';
+  document.getElementById('kb-recipe-list').style.display='';
+  if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
+}
+function editKbRecipe(id,ctx){
+  const pool=ctx==='vesper'?vesperRecipes:recipes;
+  const r=pool.find(x=>x.id===id);
+  formContext=ctx;
+  formData={id:r.id,name:r.name,time:r.time,servings:String(r.servings),tags:(r.tags||[]).join(', '),type:r.type,vesperKat:r.vesperKat||'salzig',ingredients:r.ingredients.map(i=>({...i})),steps:[...r.steps],image:null,editMode:true};
+  const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
+  document.getElementById(detId).style.display='none';
+  const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
+  renderKbAddForm(ctx,formId);
+  document.getElementById(formId).style.display='block';
+}
+function deleteKbRecipe(id,ctx){
+  if(!confirm('Rezept wirklich löschen?'))return;
+  if(ctx==='vesper'){vesperRecipes=vesperRecipes.filter(x=>x.id!==id);}
+  else{recipes=recipes.filter(x=>x.id!==id);}
+  saveAll();backToKbList(ctx);
+}
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
@@ -428,7 +705,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function parseMinutes(t){if(!t)return null;const m=t.match(/(\d+)/);return m?parseInt(m[1]):null;}
 function scaleAmount(amount,factor){if(!amount||factor===1)return amount;const m=amount.match(/^(\d+([.,]\d+)?)/);if(!m)return amount;const orig=parseFloat(m[1].replace(',','.'));const scaled=Math.round(orig*factor*10)/10;return amount.replace(m[1],scaled%1===0?String(scaled):String(scaled).replace('.',','));}
-function recipeCardHTML(r,ctx){const d=TYPES[r.type]||TYPES.vegetarian;return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showRecipeDetail('${r.id}','${ctx}')"><div style="width:52px;height:52px;border-radius:12px;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">${ctx==='vesper'?'🍎':d.icon}</div><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
+function recipeCardHTML(r,ctx){const d=TYPES[r.type]||TYPES.vegetarian;return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showKbRecipeDetail('${r.id}','${ctx}')"><div style="width:52px;height:52px;border-radius:12px;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">${ctx==='vesper'?'🍎':d.icon}</div><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
 function renderRecipes(){
   document.getElementById('recipe-count').innerHTML=`${recipes.length} Rezepte`;
   document.getElementById('recipe-list').innerHTML=recipes.length?recipes.map(r=>recipeCardHTML(r,'mittag')).join(''):`<div style="text-align:center;padding:50px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">📖</div><p>Noch keine Rezepte.</p></div>`;
