@@ -9,7 +9,8 @@
 <meta name="theme-color" content="#f5f0e8">
 <title>🍳 KochApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600&family=Bebas+Neue&family=Oswald:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f5f0e8;--surface:#ede8de;--card:#fffdf8;--card2:#fdf8f0;--accent:#f0a500;--accent2:#e06c2a;--green:#5daa6f;--red:#d9534f;--text:#2a1f0a;--muted:#8a7a5a;--border:#d8cdb8;--shadow:0 2px 12px rgba(0,0,0,.08);--veg:#4caf50;--meat:#e07040;--fish:#2196f3;--vesper:#9c27b0;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -36,6 +37,8 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 .check-circle.done{background:var(--green);border-color:var(--green);color:#fff;}
 .step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#1a1108;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
 .week-slot{background:var(--surface);border:1.5px dashed var(--border);border-radius:12px;padding:10px;cursor:pointer;min-height:75px;display:flex;flex-direction:column;justify-content:space-between;transition:all .18s;font-size:11px;}
+.week-slot.drag-over{border-color:var(--accent);background:rgba(240,165,0,.1);transform:scale(1.02);}
+.week-slot.dragging{opacity:.5;}
 .week-slot.veg-slot{border-style:solid;border-color:var(--veg);background:rgba(76,175,80,.05);}
 .week-slot.meat-slot{border-style:solid;border-color:var(--meat);background:rgba(224,112,64,.05);}
 .week-slot.fish-slot{border-style:solid;border-color:var(--fish);background:rgba(33,150,243,.05);}
@@ -97,7 +100,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
   <div class="card api-card" style="position:relative;z-index:1;">
     <div style="text-align:center;margin-bottom:28px;">
       <div style="font-size:52px;margin-bottom:10px;">🍳</div>
-      <h1 class="serif" style="font-size:30px;color:var(--accent);letter-spacing:-.5px;">KochApp</h1>
+      <h1 style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:52px;color:var(--accent);letter-spacing:6px;line-height:1;">KOCHAPP</h1>
       <p style="color:var(--muted);font-size:13px;margin-top:5px;">Deine persönliche Küchen-Assistentin mit KI</p>
     </div>
     <label class="label">Anthropic API-Key</label>
@@ -114,7 +117,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 <div id="app" style="display:none;position:relative;z-index:1;">
   <header>
     <div class="header-top">
-      <h1 class="serif" style="font-size:24px;color:var(--accent);letter-spacing:-.3px;">🍳 KochApp <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.4</span></h1>
+      <h1 style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:32px;color:var(--accent);letter-spacing:3px;line-height:1;">KOCHAPP <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;letter-spacing:0;">v7.6</span></h1>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
         <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
@@ -128,14 +131,14 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <button onclick="showMain('wochenplan')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
           <div style="font-size:52px;">📅</div>
           <div>
-            <div class="serif" style="font-size:22px;color:var(--accent);margin-bottom:4px;">Wochenplan</div>
+            <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;">WOCHENPLAN</div>
             <div style="font-size:13px;color:var(--muted);">Mittag & Vesper planen · Einkauf</div>
           </div>
         </button>
         <button onclick="showMain('kochbuch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
           <div style="font-size:52px;">📖</div>
           <div>
-            <div class="serif" style="font-size:22px;color:var(--accent);margin-bottom:4px;">Kochbuch</div>
+            <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;">KOCHBUCH</div>
             <div style="font-size:13px;color:var(--muted);">Rezepte durchstöbern & hinzufügen</div>
           </div>
         </button>
@@ -904,6 +907,51 @@ function shopItemHTML(item){return`<div class="card" style="display:flex;align-i
 function toggleShop(id){const i=shoppingList.find(x=>x.id===id);if(i)i.checked=!i.checked;saveAll();renderShopping();}
 function removeShop(id){shoppingList=shoppingList.filter(x=>x.id!==id);saveAll();renderShopping();}
 function clearChecked(){shoppingList=shoppingList.filter(x=>!x.checked);saveAll();renderShopping();}
+// ── Drag & Drop ──────────────────────────────────
+let dragSource=null; // {type:'week'|'vesper', week, day, kat}
+
+function onDragStart(e, type, day, week, kat){
+  dragSource={type,day,week,kat};
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+}
+function onDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+}
+function onDragOver(e){
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e){
+  e.currentTarget.classList.remove('drag-over');
+}
+function onDrop(e, type, day, week, kat){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!dragSource)return;
+  if(type==='week'){
+    const w1=`week${dragSource.week}`,w2=`week${week}`;
+    const tmp=weekPlan[w1]?.[dragSource.day];
+    if(!weekPlan[w1])weekPlan[w1]={};
+    if(!weekPlan[w2])weekPlan[w2]={};
+    weekPlan[w1][dragSource.day]=weekPlan[w2][day];
+    if(weekPlan[w1][dragSource.day]===undefined)delete weekPlan[w1][dragSource.day];
+    weekPlan[w2][day]=tmp;
+    if(weekPlan[w2][day]===undefined)delete weekPlan[w2][day];
+    saveAll();renderWeek();
+  } else if(type==='vesper'){
+    const k1=dragSource.day+'-'+dragSource.kat;
+    const k2=day+'-'+kat;
+    const tmp=vesperPlan[k1];
+    vesperPlan[k1]=vesperPlan[k2];
+    if(vesperPlan[k1]===undefined)delete vesperPlan[k1];
+    vesperPlan[k2]=tmp;
+    if(vesperPlan[k2]===undefined)delete vesperPlan[k2];
+    saveAll();renderVesper();
+  }
+  dragSource=null;
+}
 let currentWocheTab=1;
 function showWocheTab(n){
   currentWocheTab=n;
@@ -929,12 +977,20 @@ function renderWeek(){
     const ds=daySettings[day],isWD=WEEKDAYS.includes(day);
     const tl=isWD&&ds?(ds.maxMin?`⏱ max ${ds.maxMin} min`:''):'';
     const r=plan[day];
+    const wt=currentWocheTab;
     return`<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;">
       <div style="width:36px;flex-shrink:0;"><div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div>${tl?`<div style="font-size:8px;color:var(--green);">${tl}</div>`:''}</div>
-      <div class="week-slot ${slotClass(r?.type)}" style="flex:1;" onclick="openPicker('${day}',${currentWocheTab})">
+      <div class="week-slot ${slotClass(r?.type)}" style="flex:1;" 
+        onclick="openPicker('${day}',${wt})"
+        draggable="true"
+        ondragstart="onDragStart(event,'week','${day}',${wt},null)"
+        ondragend="onDragEnd(event)"
+        ondragover="onDragOver(event)"
+        ondragleave="onDragLeave(event)"
+        ondrop="onDrop(event,'week','${day}',${wt},null)">
         <div style="color:var(--muted);font-size:10px;font-weight:700;">Mittag</div>
         ${r?`<div style="font-size:12px;line-height:1.4;color:var(--text);margin:4px 0;flex:1;font-weight:500;">${typeIcon(r.type)} ${escHtml(r.name)}</div>
-             <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearSlot('${day}',${currentWocheTab})" style="background:none;border:none;color:var(--muted);font-size:16px;padding:0;line-height:1;">×</button></div>`
+             <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearSlot('${day}',${wt})" style="background:none;border:none;color:var(--muted);font-size:16px;padding:0;line-height:1;">×</button></div>`
           :`<div style="font-size:22px;color:var(--border);text-align:center;margin:auto;">+</div>`}
       </div>
     </div>`;
@@ -947,13 +1003,27 @@ function renderVesper(){
     return`<div style="margin-bottom:12px;">
       <div style="font-size:12px;font-weight:700;color:var(--vesper);text-transform:uppercase;margin-bottom:6px;">${day}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div class="week-slot ${rs?'vesper-slot':''}" onclick="openVesperPicker('${day}','salzig')">
+        <div class="week-slot ${rs?'vesper-slot':''}"
+          onclick="openVesperPicker('${day}','salzig')"
+          draggable="true"
+          ondragstart="onDragStart(event,'vesper','${day}',null,'salzig')"
+          ondragend="onDragEnd(event)"
+          ondragover="onDragOver(event)"
+          ondragleave="onDragLeave(event)"
+          ondrop="onDrop(event,'vesper','${day}',null,'salzig')">
           <div style="color:var(--muted);font-size:9px;font-weight:700;">🧀 Salzig</div>
           ${rs?`<div style="font-size:11px;line-height:1.3;color:var(--text);margin:3px 0;flex:1;">${typeIcon(rs.type)} ${escHtml(rs.name)}</div>
                <button onclick="event.stopPropagation();clearVesperSlot('${day}','salzig')" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;align-self:flex-end;line-height:1;">×</button>`
             :`<div style="font-size:18px;color:var(--border);text-align:center;margin:auto;">+</div>`}
         </div>
-        <div class="week-slot ${rs2?'vesper-slot':''}" onclick="openVesperPicker('${day}','suess')">
+        <div class="week-slot ${rs2?'vesper-slot':''}"
+          onclick="openVesperPicker('${day}','suess')"
+          draggable="true"
+          ondragstart="onDragStart(event,'vesper','${day}',null,'suess')"
+          ondragend="onDragEnd(event)"
+          ondragover="onDragOver(event)"
+          ondragleave="onDragLeave(event)"
+          ondrop="onDrop(event,'vesper','${day}',null,'suess')">
           <div style="color:var(--muted);font-size:9px;font-weight:700;">🍰 Süß</div>
           ${rs2?`<div style="font-size:11px;line-height:1.3;color:var(--text);margin:3px 0;flex:1;">${typeIcon(rs2.type)} ${escHtml(rs2.name)}</div>
                 <button onclick="event.stopPropagation();clearVesperSlot('${day}','suess')" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;align-self:flex-end;line-height:1;">×</button>`
