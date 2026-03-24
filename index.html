@@ -140,6 +140,13 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
             <div style="font-size:13px;color:var(--muted);">Rezepte durchstöbern & hinzufügen</div>
           </div>
         </button>
+        <button onclick="showMain('einkauf')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
+          <div style="font-size:52px;">🛒</div>
+          <div>
+            <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;">EINKAUF</div>
+            <div style="font-size:13px;color:var(--muted);">Einkaufsliste verwalten</div>
+          </div>
+        </button>
       </div>
     </div>
 
@@ -246,9 +253,10 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
   </main>
 
   <div class="bottom-bar">
-    <button class="bottom-btn" id="btn-home" onclick="goHome()"><span style="font-size:18px;">🏠</span> Start</button>
+    <button class="bottom-btn" id="btn-home" onclick="goHome()" style="padding:10px 14px;"><span style="font-size:24px;">🏠</span></button>
     <button class="bottom-btn" id="btn-wochenplan" onclick="showMain('wochenplan')"><span style="font-size:18px;">📅</span> Woche</button>
     <button class="bottom-btn" id="btn-kochbuch" onclick="showMain('kochbuch')"><span style="font-size:18px;">📖</span> Kochbuch</button>
+    <button class="bottom-btn" id="btn-einkauf-b" onclick="showMain('einkauf')"><span style="font-size:18px;">🛒</span> Einkauf</button>
   </div>
 </div>
 <div id="picker-modal" style="display:none;"></div>
@@ -314,6 +322,7 @@ function showPage(page){
 }
 function goHome(){showPage('start');}
 function showMain(section){
+  if(section==='einkauf'){showPage('wochenplan');showWpTab('einkauf');return;}
   showPage(section);
   if(section==='wochenplan'){showWpTab('mittag');renderWeek();}
   if(section==='kochbuch'){backToKategorien();}
@@ -529,7 +538,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v8.3';
+  const VERSION='v8.4';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
