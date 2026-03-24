@@ -122,7 +122,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <svg viewBox="0 0 160 70" width="110" height="48" xmlns="http://www.w3.org/2000/svg">
   <defs>
 <img src="chef_logo.png" alt="CHEF" style="height:38px;width:auto;border-radius:6px;">
-        <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;">v8.1</span>
+        <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;">v8.2</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
@@ -963,7 +963,9 @@ function doSwap(type, day, week, kat){
   dragSource=null;
 }
 
-// Touch support for iPad
+// Touch support für iPad — optimiert mit RAF + transform
+let rafId=null, lastTouchX=0, lastTouchY=0;
+
 function onTouchStart(e, type, day, week, kat){
   const touch=e.touches[0];
   touchDragEl=e.currentTarget;
@@ -972,24 +974,35 @@ function onTouchStart(e, type, day, week, kat){
   touchOffX=touch.clientX-rect.left;
   touchOffY=touch.clientY-rect.top;
   touchClone=touchDragEl.cloneNode(true);
-  touchClone.style.cssText=`position:fixed;width:${rect.width}px;opacity:.8;pointer-events:none;z-index:9999;border-radius:12px;left:${rect.left}px;top:${rect.top}px;`;
+  touchClone.style.cssText=`position:fixed;width:${rect.width}px;opacity:.85;pointer-events:none;z-index:9999;border-radius:12px;left:${rect.left}px;top:${rect.top}px;will-change:transform;transition:none;box-shadow:0 8px 24px rgba(0,0,0,.2);`;
   document.body.appendChild(touchClone);
-  touchDragEl.style.opacity='.4';
+  touchDragEl.style.opacity='.35';
+  lastTouchX=touch.clientX;lastTouchY=touch.clientY;
   e.preventDefault();
 }
+
+function updateClonePosition(){
+  if(!touchClone)return;
+  touchClone.style.left=(lastTouchX-touchOffX)+'px';
+  touchClone.style.top=(lastTouchY-touchOffY)+'px';
+  // highlight
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  const el=document.elementFromPoint(lastTouchX,lastTouchY)?.closest('.week-slot');
+  if(el&&el!==touchDragEl)el.classList.add('drag-over');
+  rafId=null;
+}
+
 function onTouchMove(e){
   if(!touchClone)return;
   const touch=e.touches[0];
-  touchClone.style.left=(touch.clientX-touchOffX)+'px';
-  touchClone.style.top=(touch.clientY-touchOffY)+'px';
-  // highlight target
-  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-  const el=document.elementFromPoint(touch.clientX,touch.clientY)?.closest('.week-slot');
-  if(el&&el!==touchDragEl)el.classList.add('drag-over');
+  lastTouchX=touch.clientX;lastTouchY=touch.clientY;
+  if(!rafId)rafId=requestAnimationFrame(updateClonePosition);
   e.preventDefault();
 }
+
 function onTouchEnd(e){
   if(!touchClone)return;
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   const touch=e.changedTouches[0];
   if(touchDragEl)touchDragEl.style.opacity='';
   touchClone.remove();touchClone=null;
