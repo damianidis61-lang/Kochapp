@@ -116,18 +116,10 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
   </div>
 </div>
 <div id="app" style="display:none;position:relative;z-index:1;">
-  <header>
-    <div class="header-top">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <svg viewBox="0 0 160 70" width="110" height="48" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-<img src="chef_logo.png" alt="CHEF" style="height:38px;width:auto;border-radius:6px;">
-        <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif;font-weight:400;">v8.2</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <span id="sync-status" style="font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
-        <button class="btn btn-ghost" style="font-size:11px;padding:7px 12px;" onclick="showKeyModal()">🔑 Key</button>
-      </div>
+  <header style="padding:14px 18px 10px;border-bottom:1.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;">
+    <div style="display:flex;justify-content:center;align-items:center;position:relative;">
+      <span id="sync-status" style="position:absolute;left:0;font-size:11px;color:var(--muted);display:flex;align-items:center;"></span>
+      <img src="chef_logo.png" alt="CHEF" onclick="showKeyModal()" style="height:72px;width:auto;border-radius:10px;cursor:pointer;transition:transform .15s;" ontouchstart="this.style.transform='scale(.95)'" ontouchend="this.style.transform=''">
     </div>
   </header>
   <main>
@@ -224,7 +216,10 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
           <h2 class="serif" id="kb-kategorie-titel" style="font-size:20px;color:var(--accent);flex:1;"></h2>
           <button class="btn btn-primary" id="kb-add-btn" style="font-size:12px;padding:8px 14px;" onclick="showAddFromKategorie()">+ Hinzufügen</button>
         </div>
-        <input type="text" id="kb-search" placeholder="🔍 Suchen…" oninput="filterKbRecipes(this.value)" style="margin-bottom:14px;">
+        <div style="position:relative;margin-bottom:14px;">
+          <input type="text" id="kb-search" placeholder="🔍 Suchen… z.B. Nudeln Hühnchen" oninput="filterKbRecipes(this.value)" style="margin-bottom:0;padding-right:42px;">
+          <button onclick="showSearchInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#1a1108;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">ℹ</button>
+        </div>
         <div id="kb-recipe-list"></div>
         <div id="kb-recipe-detail" style="display:none;"></div>
         <div id="kb-add-form" style="display:none;"></div>
@@ -374,7 +369,7 @@ function filterKbRecipes(q){
   const cat=KB_CATEGORIES[currentKbKat];
   const pool=cat.ctx==='vesper'?vesperRecipes:recipes;
   const base=pool.filter(cat.filter);
-  const filtered=q?base.filter(r=>r.name.toLowerCase().includes(q.toLowerCase())||(r.ingredients||[]).some(i=>i.name.toLowerCase().includes(q.toLowerCase()))):base;
+  const filtered=smartSearch(base,q);
   document.getElementById('kb-recipe-list').innerHTML=filtered.length
     ?filtered.map(r=>recipeCardHTML(r,cat.ctx==='vesper'?'vesper':'mittag')).join('')
     :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><p>Keine Ergebnisse für "${q}"</p></div>`;
@@ -534,8 +529,9 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
+  const VERSION='v8.3';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
-    <div class="serif" style="font-size:20px;margin-bottom:4px;">🔑 API-Key</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
     <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
       <div id="key-display" style="font-size:12px;font-family:monospace;word-break:break-all;color:var(--text);">${masked}</div>
@@ -733,13 +729,84 @@ function setVesperCol(col){
   document.getElementById('vesper-col-suess').className='sub-btn'+(col==='suess'?' active':'');
   renderVesperRecipes();
 }
+const SYNONYMS={
+  'nudeln':['pasta','spaghetti','penne','rigatoni','tagliatelle','fettuccine','linguine','farfalle','lasagne','nudel'],
+  'pasta':['nudeln','spaghetti','penne','rigatoni','tagliatelle','fettuccine','linguine','farfalle','lasagne','nudel'],
+  'hühnchen':['hähnchen','huhn','chicken','hahn','poulet','geflügel'],
+  'hähnchen':['hühnchen','huhn','chicken','hahn','poulet','geflügel'],
+  'chicken':['hühnchen','hähnchen','huhn','hahn','poulet','geflügel'],
+  'rind':['rindfleisch','beef','steak','hackfleisch'],
+  'beef':['rind','rindfleisch','steak','hackfleisch'],
+  'kartoffeln':['kartoffel','potatoes','potato','spuds','erdäpfel'],
+  'potato':['kartoffeln','kartoffel','potatoes','erdäpfel'],
+  'reis':['rice','basmati','jasminreis'],
+  'rice':['reis','basmati','jasminreis'],
+  'tomate':['tomaten','tomato','tomatoes'],
+  'tomaten':['tomate','tomato','tomatoes'],
+  'zwiebel':['zwiebeln','onion','onions'],
+  'knoblauch':['garlic'],
+  'garlic':['knoblauch'],
+  'käse':['cheese','parmesan','mozzarella','gouda','emmentaler'],
+  'cheese':['käse','parmesan','mozzarella','gouda'],
+  'fisch':['fish','lachs','salmon','thunfisch','tuna','forelle','kabeljau'],
+  'lachs':['salmon','fisch','fish'],
+  'salmon':['lachs','fisch','fish'],
+  'schwein':['schweinefleisch','pork','schinken','speck','bacon'],
+  'pork':['schwein','schweinefleisch','schinken','speck','bacon'],
+  'salat':['lettuce','salad'],
+  'spinat':['spinach'],
+  'zucchini':['zucchetti','courgette'],
+  'paprika':['pepper','capsicum'],
+  'ei':['eier','egg','eggs'],
+  'eier':['ei','egg','eggs'],
+};
+
+function expandSynonyms(term){
+  const t=term.toLowerCase();
+  const syns=SYNONYMS[t]||[];
+  return[t,...syns];
+}
+
+function smartSearch(recipes, query){
+  if(!query.trim())return recipes;
+  const terms=query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  return recipes.filter(r=>{
+    const searchText=(r.name+' '+(r.tags||[]).join(' ')+' '+(r.ingredients||[]).map(i=>i.name).join(' ')+' '+(r.steps||[]).join(' ')).toLowerCase();
+    return terms.every(term=>{
+      const variants=expandSynonyms(term);
+      return variants.some(v=>searchText.includes(v));
+    });
+  });
+}
+function showSearchInfo(){
+  const modal=document.getElementById('picker-modal');modal.style.display='block';
+  modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
+    <div class="serif" style="font-size:20px;margin-bottom:14px;">🔍 Suche — Tipps</div>
+    <div class="card" style="margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Mehrere Begriffe</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">Trenne Begriffe mit einem <strong>Leerzeichen</strong> — alle müssen vorkommen.<br>
+      <span style="background:var(--surface);padding:2px 8px;border-radius:6px;font-family:monospace;">Nudeln Hühnchen</span> → findet Rezepte mit beidem</div>
+    </div>
+    <div class="card" style="margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Synonyme werden erkannt</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">
+        🍝 Nudeln = Pasta = Spaghetti<br>
+        🐔 Hühnchen = Hähnchen = Chicken<br>
+        🥔 Kartoffeln = Potato<br>
+        🐟 Lachs = Salmon = Fisch<br>
+        🥩 Rind = Beef = Steak<br>
+        🧀 Käse = Cheese
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Durchsucht wird</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">✓ Rezeptname &nbsp;✓ Zutaten &nbsp;✓ Tags</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="closePicker()">Verstanden ✓</button>
+  </div></div>\`;
+}
 function filterRecipes(q){
-  const query=q.toLowerCase().trim();
-  const filtered=query?recipes.filter(r=>
-    r.name.toLowerCase().includes(query)||
-    (r.tags||[]).some(t=>t.toLowerCase().includes(query))||
-    (r.ingredients||[]).some(i=>i.name.toLowerCase().includes(query))
-  ):recipes;
+  const filtered=smartSearch(recipes,q);
   document.getElementById('recipe-list').innerHTML=filtered.length
     ?filtered.map(r=>recipeCardHTML(r,'mittag')).join('')
     :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><p>Keine Rezepte gefunden für "${q}"</p></div>`;
