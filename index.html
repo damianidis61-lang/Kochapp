@@ -190,15 +190,20 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
     <!-- KOCHBUCH -->
     <div id="page-kochbuch" class="page">
       <div id="kb-kategorien">
+        <div style="position:relative;margin-bottom:14px;">
+          <input type="text" id="kb-global-search" placeholder="🔍 Rezept suchen… z.B. Nudeln Hühnchen" oninput="globalKbSearch(this.value)" style="padding-right:42px;">
+          <button onclick="showSearchInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#1a1108;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">ℹ</button>
+        </div>
+        <div id="kb-global-results" style="display:none;"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <button onclick="showKategorie('fleisch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
-            <img src="icons/Steak.png" style="width:72px;height:72px;object-fit:contain;"><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
+            <img src="icons/Steak.png" style="width:120px;height:120px;object-fit:contain;"><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
           </button>
           <button onclick="showKategorie('nudeln')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
             <div style="font-size:36px;">🍜</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Nudelgerichte</div>
           </button>
           <button onclick="showKategorie('reis')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
-            <img src="icons/Reis.png" style="width:72px;height:72px;object-fit:contain;"><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Reisgerichte</div>
+            <img src="icons/Reis.png" style="width:120px;height:120px;object-fit:contain;"><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Reisgerichte</div>
           </button>
           <button onclick="showKategorie('suppen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:var(--shadow);">
             <div style="font-size:36px;">🥣</div><div style="font-size:12px;font-weight:600;color:var(--text);text-align:center;">Suppen</div>
@@ -348,6 +353,23 @@ const KB_CATEGORIES={
   'vesper-kb':{label:'Vesper',icon:'🍎',filter:r=>true,ctx:'vesper'},
 };
 let currentKbKat=null;
+function globalKbSearch(q){
+  const resultsEl=document.getElementById('kb-global-results');
+  const kategorienEl=document.querySelector('#kb-kategorien .kb-grid');
+  if(!q.trim()){
+    resultsEl.style.display='none';
+    document.querySelectorAll('#kb-kategorien button[onclick*="showKategorie"]').forEach(b=>b.style.display='');
+    return;
+  }
+  // search all recipes
+  const allRecipes=[...recipes.map(r=>({...r,_ctx:'mittag'})),...vesperRecipes.map(r=>({...r,_ctx:'vesper'}))];
+  const filtered=smartSearch(allRecipes,q);
+  document.querySelectorAll('#kb-kategorien button[onclick*="showKategorie"]').forEach(b=>b.style.display='none');
+  resultsEl.style.display='block';
+  resultsEl.innerHTML=filtered.length
+    ?filtered.map(r=>recipeCardHTML(r,r._ctx)).join('')
+    :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><p>Keine Rezepte gefunden für "${q}"</p></div>`;
+}
 function showKategorie(kat){
   currentKbKat=kat;
   const cat=KB_CATEGORIES[kat];
@@ -358,6 +380,11 @@ function showKategorie(kat){
   renderKbRecipes(cat);
 }
 function backToKategorien(){
+  const inp=document.getElementById('kb-global-search');
+  if(inp)inp.value='';
+  const res=document.getElementById('kb-global-results');
+  if(res)res.style.display='none';
+  document.querySelectorAll('#kb-kategorien button[onclick*="showKategorie"]').forEach(b=>b.style.display='');
   document.getElementById('kb-kategorien').style.display='block';
   document.getElementById('kb-rezepte').style.display='none';
   document.getElementById('kb-recipe-detail').style.display='none';
@@ -538,7 +565,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v8.5';
+  const VERSION='v8.6';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
