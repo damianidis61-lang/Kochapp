@@ -125,34 +125,41 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;}
   </header>
   <main>
     <!-- STARTSEITE -->
-    <div id="page-start" class="page active">
-      <div style="display:flex;flex-direction:column;gap:16px;padding-top:24px;">
-        <button onclick="showMain('wochenplan')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
+    <div id="page-start" class="page active" style="height:calc(100vh - 130px);display:flex;flex-direction:column;">
+      <div style="display:flex;flex-direction:column;gap:12px;flex:1;padding-top:16px;">
+        <button onclick="showMain('wochenplan')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:0 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;flex:1;">
           <div style="font-size:52px;">📅</div>
           <div>
             <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;">WOCHENPLAN</div>
             <div style="font-size:13px;color:var(--muted);">Mittag & Vesper planen · Einkauf</div>
           </div>
         </button>
-        <button onclick="showMain('kochbuch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
+        <button onclick="showMain('kochbuch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:0 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;flex:1;">
           <div style="font-size:52px;">📖</div>
           <div>
             <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;">KOCHBUCH</div>
             <div style="font-size:13px;color:var(--muted);">Rezepte durchstöbern & hinzufügen</div>
           </div>
         </button>
-        <button onclick="showMain('einkauf')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;">
+        <button onclick="showMain('einkauf')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:0 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;flex:1;">
           <div style="font-size:52px;">🛒</div>
           <div>
             <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:24px;color:var(--accent);letter-spacing:2px;">EINKAUF</div>
             <div style="font-size:13px;color:var(--muted);">Einkaufsliste verwalten</div>
           </div>
         </button>
+        <button style="background:var(--card);border:1.5px dashed var(--border);border-radius:20px;padding:0 24px;display:flex;align-items:center;gap:20px;cursor:default;box-shadow:var(--shadow);width:100%;text-align:left;flex:1;opacity:.5;">
+          <div style="font-size:52px;">⭐</div>
+          <div>
+            <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:24px;color:var(--muted);letter-spacing:2px;">RESERVE</div>
+            <div style="font-size:13px;color:var(--muted);">Demnächst verfügbar</div>
+          </div>
+        </button>
       </div>
     </div>
 
     <!-- WOCHENPLAN -->
-    <div id="page-wochenplan" class="page">
+    <div id="page-wochenplan" class="page" style="min-height:calc(100vh - 130px);">
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <button class="sub-btn active" id="wp-tab-mittag" onclick="showWpTab('mittag')">🍽️ Mittag</button>
         <button class="sub-btn" id="wp-tab-vesper" onclick="showWpTab('vesper')">🍎 Vesper</button>
@@ -170,7 +177,7 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;}
         </div>
         <div style="display:flex;gap:8px;align-items:flex-start;">
           <div id="week-grid" style="flex:1;"></div>
-          <button class="btn btn-primary" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:14px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;height:380px;">Planen</button>
+          <button class="btn btn-primary" id="planen-btn" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:14px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;">Planen</button>
         </div>
       </div>
       <div id="wp-vesper" style="display:none;">
@@ -194,8 +201,8 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;}
 
     <!-- KOCHBUCH -->
     <div id="page-kochbuch" class="page">
-      <div id="kb-kategorien">
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <div id="kb-kategorien" style="height:calc(100vh - 130px);display:flex;flex-direction:column;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
           <div style="position:relative;flex:1;">
             <input type="text" id="kb-global-search" placeholder="🔍 Rezept suchen… z.B. Nudeln Hühnchen" oninput="globalKbSearch(this.value)" style="padding-right:42px;margin-bottom:0;">
             <button onclick="showSearchInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#1a1108;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">ℹ</button>
@@ -203,30 +210,36 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;}
           <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;white-space:nowrap;" onclick="showAddFromKategorienMain()">+ Neu</button>
         </div>
         <div id="kb-global-results" style="display:none;"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button onclick="showKategorie('fleisch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <img src="icons/Steak.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;">
+          <button onclick="showKategorie('fleisch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <img src="icons/Steak.png" style="width:60px;height:60px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="font-size:52px;display:none;">🥩</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
           </button>
-          <button onclick="showKategorie('nudeln')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <img src="icons/Spaghetti.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Nudelgerichte</div>
+          <button onclick="showKategorie('nudeln')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <img src="icons/Spaghetti.png" style="width:60px;height:60px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="font-size:52px;display:none;">🍜</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Nudelgerichte</div>
           </button>
-          <button onclick="showKategorie('reis')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <img src="icons/Reis.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Reisgerichte</div>
+          <button onclick="showKategorie('reis')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <img src="icons/Reis.png" style="width:60px;height:60px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="font-size:52px;display:none;">🍚</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Reisgerichte</div>
           </button>
-          <button onclick="showKategorie('suppen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <img src="icons/Suppe.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Suppen</div>
+          <button onclick="showKategorie('suppen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <img src="icons/Suppe.png" style="width:60px;height:60px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="font-size:52px;display:none;">🥣</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Suppen</div>
           </button>
-          <button onclick="showKategorie('grillen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <div style="font-size:60px;line-height:1.1;">🔥</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Grillen</div>
+          <button onclick="showKategorie('grillen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:52px;line-height:1.1;">🔥</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Grillen</div>
           </button>
-          <button onclick="showKategorie('backen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <div style="font-size:60px;line-height:1.1;">🎂</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Backen</div>
+          <button onclick="showKategorie('backen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:52px;line-height:1.1;">🎂</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Backen</div>
           </button>
-          <button onclick="showKategorie('ofen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <div style="font-size:60px;line-height:1.1;">🫕</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Ofengerichte</div>
+          <button onclick="showKategorie('ofen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:52px;line-height:1.1;">🫕</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Ofengerichte</div>
           </button>
-          <button onclick="showKategorie('vesper-kb')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <div style="font-size:60px;line-height:1.1;">🍎</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Vesper</div>
+          <button onclick="showKategorie('vesper-kb')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:52px;line-height:1.1;">🍎</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Vesper</div>
+          </button>
+          <button style="background:var(--card);border:1.5px dashed var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:default;box-shadow:var(--shadow);opacity:.45;">
+            <div style="font-size:52px;line-height:1.1;">⭐</div><div style="font-size:11px;font-weight:600;color:var(--muted);text-align:center;">Reserve</div>
+          </button>
+          <button style="background:var(--card);border:1.5px dashed var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:default;box-shadow:var(--shadow);opacity:.45;">
+            <div style="font-size:52px;line-height:1.1;">⭐</div><div style="font-size:11px;font-weight:600;color:var(--muted);text-align:center;">Reserve</div>
           </button>
         </div>
       </div>
@@ -1267,8 +1280,6 @@ function renderWeek(){
   const monthEl=document.getElementById('cal-month');
   if(monthEl)monthEl.textContent=formatMonth(dates)+(currentWocheTab===2?' · Woche 2':'');
   document.getElementById('week-grid').innerHTML=DAYS.map((day,idx)=>{
-    const ds=daySettings[day],isWD=WEEKDAYS.includes(day);
-    const tl=isWD&&ds?(ds.maxMin?`⏱ max ${ds.maxMin} min`:''):'';
     const r=plan[day];
     const wt=currentWocheTab;
     const dateStr=formatDate(dates[idx]);
@@ -1276,7 +1287,6 @@ function renderWeek(){
       <div style="width:40px;flex-shrink:0;text-align:center;">
         <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div>
         <div style="font-size:10px;color:var(--muted);">${dateStr}</div>
-        ${tl?`<div style="font-size:8px;color:var(--green);white-space:nowrap;">${tl}</div>`:''}
       </div>
       <div class="week-slot ${slotClass(r?.type)}" style="flex:1;" 
         data-drag="1" data-dtype="week" data-day="${day}" data-week="${wt}"
@@ -1294,8 +1304,21 @@ function renderWeek(){
       </div>
     </div>`;
   }).join('');
+  setTimeout(updatePlanenBtnHeight, 50);
 }
 function clearSlot(day,week){delete weekPlan[`week${week||currentWocheTab}`][day];saveAll();renderWeek();}
+function updatePlanenBtnHeight(){
+  // Planen-Button auf Höhe der 5 Werktags-Slots (Mo-Fr) beschränken
+  requestAnimationFrame(()=>{
+    const grid=document.getElementById('week-grid');
+    const btn=document.getElementById('planen-btn');
+    if(!grid||!btn)return;
+    const slots=grid.querySelectorAll('[data-dtype="week"]');
+    let h=0;
+    slots.forEach((s,i)=>{if(i<5)h+=s.closest('div').offsetHeight;});
+    if(h>0)btn.style.height=h+'px';
+  });
+}
 function renderVesper(){
   document.getElementById('vesper-grid').innerHTML=WEEKDAYS.map(day=>{
     const rs=vesperPlan[day+'-salzig'], rs2=vesperPlan[day+'-suess'];
@@ -1374,6 +1397,7 @@ function runAutoPlan(){
     }
   }
   saveAll();closeAutoPlan();renderWeek();toast(`✓ ${totalPlanned} Gerichte für 2 Wochen geplant!`);
+  updatePlanenBtnHeight();
 }
 function openVesperPlan(){
   const modal=document.getElementById('vesperplan-modal');modal.style.display='block';
