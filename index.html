@@ -168,17 +168,16 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
           <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
           <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
         </div>
-        <div style="display:flex;gap:8px;align-items:stretch;">
+        <div style="display:flex;gap:8px;align-items:flex-start;">
           <div id="week-grid" style="flex:1;"></div>
-          <button class="btn btn-primary" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:12px 8px;font-size:12px;border-radius:12px;white-space:nowrap;">Planen →</button>
+          <button class="btn btn-primary" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:16px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;align-self:stretch;">Planen</button>
         </div>
       </div>
       <div id="wp-vesper" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <span style="color:var(--muted);font-size:13px;">Vesper Mo–Fr</span>
-          <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openVesperPlan()">Planen →</button>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <div id="vesper-grid" style="flex:1;"></div>
+          <button class="btn btn-primary" onclick="openVesperPlan()" style="writing-mode:vertical-rl;padding:16px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;align-self:stretch;">Planen</button>
         </div>
-        <div id="vesper-grid"></div>
       </div>
       <div id="wp-einkauf" style="display:none;">
         <div class="card" style="margin-bottom:16px;">
@@ -632,7 +631,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v9.3';
+  const VERSION='v9.4';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -813,7 +812,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function parseMinutes(t){if(!t)return null;const m=t.match(/(\d+)/);return m?parseInt(m[1]):null;}
 function scaleAmount(amount,factor){if(!amount||factor===1)return amount;const m=amount.match(/^(\d+([.,]\d+)?)/);if(!m)return amount;const orig=parseFloat(m[1].replace(',','.'));const scaled=Math.round(orig*factor*10)/10;return amount.replace(m[1],scaled%1===0?String(scaled):String(scaled).replace('.',','));}
-function recipeCardHTML(r,ctx){const d=TYPES[r.type]||TYPES.vegetarian;return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showKbRecipeDetail('${r.id}','${ctx}')"><div style="width:52px;height:52px;border-radius:12px;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;">${ctx==='vesper'?'🍎':d.icon}</div><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
+function recipeCardHTML(r,ctx){return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showKbRecipeDetail('${r.id}','${ctx}')"><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
 function renderRecipes(){
   document.getElementById('recipe-count').innerHTML=`${recipes.length} Rezepte`;
   document.getElementById('recipe-list').innerHTML=recipes.length?recipes.map(r=>recipeCardHTML(r,'mittag')).join(''):`<div style="text-align:center;padding:50px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">📖</div><p>Noch keine Rezepte.</p></div>`;
