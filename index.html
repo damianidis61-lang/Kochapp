@@ -38,7 +38,7 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 .check-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .18s;cursor:pointer;}
 .check-circle.done{background:var(--green);border-color:var(--green);color:#fff;}
 .step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#1a1108;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
-.week-slot{background:var(--surface);border:1.5px dashed var(--border);border-radius:12px;padding:10px;cursor:pointer;min-height:75px;display:flex;flex-direction:column;justify-content:space-between;transition:all .18s;font-size:11px;}
+.week-slot{background:var(--surface);border:1.5px dashed var(--border);border-radius:8px;padding:6px 8px;cursor:pointer;min-height:48px;display:flex;flex-direction:column;justify-content:center;transition:all .18s;font-size:11px;}
 .week-slot.drag-over{border-color:var(--accent);background:rgba(240,165,0,.1);transform:scale(1.02);}
 .week-slot.dragging{opacity:.5;}
 .week-slot.veg-slot{border-style:solid;border-color:var(--veg);background:rgba(76,175,80,.05);}
@@ -55,7 +55,7 @@ nav{display:flex;gap:3px;}
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
 .nav-btn.active{background:var(--card);color:var(--accent);border-color:var(--border);}
 .nav-btn .ni{font-size:19px;}
-main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
+main{flex:1;padding:10px 12px 70px;overflow-y:auto;}
 .bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--bg);border-top:1.5px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;z-index:100;}
 .bottom-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;transition:all .18s;}
 .bottom-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(240,165,0,.08);}
@@ -170,13 +170,13 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         </div>
         <div style="display:flex;gap:8px;align-items:flex-start;">
           <div id="week-grid" style="flex:1;"></div>
-          <button class="btn btn-primary" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:16px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;align-self:stretch;">Planen</button>
+          <button class="btn btn-primary" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:14px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;height:380px;">Planen</button>
         </div>
       </div>
       <div id="wp-vesper" style="display:none;">
         <div style="display:flex;gap:8px;align-items:flex-start;">
           <div id="vesper-grid" style="flex:1;"></div>
-          <button class="btn btn-primary" onclick="openVesperPlan()" style="writing-mode:vertical-rl;padding:16px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;align-self:stretch;">Planen</button>
+          <button class="btn btn-primary" onclick="openVesperPlan()" style="writing-mode:vertical-rl;padding:14px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;height:300px;">Planen</button>
         </div>
       </div>
       <div id="wp-einkauf" style="display:none;">
@@ -410,6 +410,14 @@ function showKategorie(kat){
   document.getElementById('kb-rezepte').style.display='block';
   document.getElementById('kb-kategorie-titel').textContent=cat.icon+' '+cat.label;
   document.getElementById('kb-search').value='';
+  // Sicherstellen dass Liste und Toolbar sichtbar, Details versteckt
+  const list=document.getElementById('kb-recipe-list');if(list)list.style.display='block';
+  const addBtn=document.getElementById('kb-add-btn');if(addBtn)addBtn.style.display='';
+  const srch=document.getElementById('kb-search');if(srch)srch.style.display='';
+  const rdet=document.getElementById('kb-recipe-detail');if(rdet){rdet.style.display='none';rdet.innerHTML='';}
+  const vdet=document.getElementById('kb-vesper-detail');if(vdet){vdet.style.display='none';vdet.innerHTML='';}
+  const rform=document.getElementById('kb-add-form');if(rform){rform.style.display='none';}
+  const vform=document.getElementById('kb-add-vesper-form');if(vform){vform.style.display='none';}
   renderKbRecipes(cat);
 }
 function backToKategorien(){
@@ -421,10 +429,12 @@ function backToKategorien(){
   document.querySelectorAll('#kb-kategorien button[onclick*="showKategorie"]').forEach(b=>b.style.display='');
   document.getElementById('kb-kategorien').style.display='block';
   document.getElementById('kb-rezepte').style.display='none';
-  document.getElementById('kb-recipe-detail').style.display='none';
-  document.getElementById('kb-add-form').style.display='none';
-  document.getElementById('kb-vesper-detail').style.display='none';
-  document.getElementById('kb-add-vesper-form').style.display='none';
+  // Sicher alle Detail/Form-Felder zurücksetzen
+  const rdet=document.getElementById('kb-recipe-detail');if(rdet){rdet.style.display='none';rdet.innerHTML='';}
+  const vdet=document.getElementById('kb-vesper-detail');if(vdet){vdet.style.display='none';vdet.innerHTML='';}
+  const rform=document.getElementById('kb-add-form');if(rform){rform.style.display='none';rform.innerHTML='';}
+  const vform=document.getElementById('kb-add-vesper-form');if(vform){vform.style.display='none';vform.innerHTML='';}
+  const rlist=document.getElementById('kb-recipe-list');if(rlist){rlist.style.display='block';rlist.innerHTML='';}
   currentKbKat=null;
 }
 function renderKbRecipes(cat){
@@ -515,7 +525,10 @@ function renderKbAddForm(ctx,formId){
 function backFromKbForm(ctx){
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   document.getElementById(formId).style.display='none';
+  document.getElementById(formId).innerHTML='';
   document.getElementById('kb-recipe-list').style.display='';
+  const addBtn=document.getElementById('kb-add-btn');if(addBtn)addBtn.style.display='';
+  const srch=document.getElementById('kb-search');if(srch)srch.style.display='';
   if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
 }
 function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:''});renderKbAddForm(ctx,formId);}
@@ -530,7 +543,8 @@ function autoAssignKategorie(r,ctx){
 }
 function saveRecipeKb(ctx,formId){
   syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}
-  const r={id:(ctx==='vesper'?'v':'r')+Date.now(),name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
+  const rid=formData.editMode?formData.id:((ctx==='vesper'?'v':'r')+Date.now());
+  const r={id:rid,name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
   autoAssignKategorie(r,ctx);
   if(formData.editMode){
     if(ctx==='vesper'){const idx=vesperRecipes.findIndex(x=>x.id===r.id);if(idx>=0)vesperRecipes[idx]=r;}
@@ -561,17 +575,23 @@ Max 5 Schritte auf Deutsch.`}]}]})});
   };reader.readAsDataURL(file);
 }
 // showRecipeDetail from kochbuch
-function showKbRecipeDetail(id,ctx){
-  pushNav(()=>{backToKbList(ctx);});
-  updateHomeBtn();
+function showKbRecipeDetail(id,ctx,portions){
+  const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
+  const det=document.getElementById(detId);
+  const isAlreadyOpen=det&&det.style.display==='block';
+  if(!isAlreadyOpen){
+    pushNav(()=>{backToKbList(ctx);});
+    updateHomeBtn();
+    document.getElementById('kb-recipe-list').style.display='none';
+    document.getElementById('kb-add-btn').style.display='none';
+    document.getElementById('kb-search').style.display='none';
+  }
   const pool=ctx==='vesper'?vesperRecipes:recipes;
   const r=pool.find(x=>x.id===id);if(!r)return;
-  const base=r.servings||2,factor=1;
-  const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
-  document.getElementById('kb-recipe-list').style.display='none';
-  document.getElementById('kb-add-btn').style.display='none';
-  document.getElementById('kb-search').style.display='none';
-  const det=document.getElementById(detId);det.style.display='block';
+  const base=r.servings||2;
+  const cur=portions!==undefined?portions:base;
+  const factor=cur/base;
+  det.style.display='block';
   const dd=TYPES[r.type]||TYPES.vegetarian;
   det.innerHTML=`
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
@@ -580,12 +600,12 @@ function showKbRecipeDetail(id,ctx){
       <div style="font-size:12px;color:var(--muted);">⏱ ${r.time} &nbsp;·&nbsp; ${dd.label}</div></div>
     </div>
     <div class="card" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
-      <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">👤 Portionen</div><div style="font-size:11px;color:var(--muted);">Basis: ${base}</div></div>
-      <div class="portion-scaler"><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}')">−</button><div class="portion-num">${base}</div><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}')">+</button></div>
+      <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">👤 Portionen</div><div style="font-size:11px;color:var(--muted);">Mengen werden angepasst</div></div>
+      <div class="portion-scaler"><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}',${Math.max(1,cur-1)})">−</button><div class="portion-num">${cur}</div><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}',${cur+1})">+</button></div>
     </div>
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">🧄 Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${r.id}','${ctx}',${base})">→ Einkaufsliste</button></div>
-      ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(ing.amount)}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
+      ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
     </div>
     <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">👩‍🍳 Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
     <div style="display:flex;gap:10px;">
@@ -595,14 +615,15 @@ function showKbRecipeDetail(id,ctx){
 }
 function backToKbList(ctx){
   const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
+  const listId='kb-recipe-list';
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
-  // hide detail and form
+  // hide detail and form, clear innerHTML to avoid stale content
   const det=document.getElementById(detId);
   if(det){det.style.display='none';det.innerHTML='';}
   const form=document.getElementById(formId);
   if(form){form.style.display='none';form.innerHTML='';}
-  // show list and toolbar
-  const list=document.getElementById('kb-recipe-list');
+  // always show list, add-btn, search
+  const list=document.getElementById(listId);
   if(list)list.style.display='block';
   const addBtn=document.getElementById('kb-add-btn');if(addBtn)addBtn.style.display='';
   const srch=document.getElementById('kb-search');if(srch)srch.style.display='';
@@ -631,7 +652,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v9.4';
+  const VERSION='v9.5';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1251,8 +1272,12 @@ function renderWeek(){
     const r=plan[day];
     const wt=currentWocheTab;
     const dateStr=formatDate(dates[idx]);
-    return`<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-      <div style="width:44px;flex-shrink:0;text-align:center;"><div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div><div style="font-size:10px;color:var(--muted);">${dateStr}</div>${tl?`<div style="font-size:8px;color:var(--green);">${tl}</div>`:''}</div>
+    return`<div style="margin-bottom:5px;display:flex;align-items:center;gap:8px;">
+      <div style="width:40px;flex-shrink:0;text-align:center;">
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div>
+        <div style="font-size:10px;color:var(--muted);">${dateStr}</div>
+        ${tl?`<div style="font-size:8px;color:var(--green);white-space:nowrap;">${tl}</div>`:''}
+      </div>
       <div class="week-slot ${slotClass(r?.type)}" style="flex:1;" 
         data-drag="1" data-dtype="week" data-day="${day}" data-week="${wt}"
         onclick="openPicker('${day}',${wt})"
@@ -1263,10 +1288,9 @@ function renderWeek(){
         ondragleave="onDragLeave(event)"
         ondrop="onDrop(event,'week','${day}',${wt},null)"
         ontouchstart="onTouchStart(event,'week','${day}',${wt},null)">
-        <div style="color:var(--muted);font-size:10px;font-weight:700;">Mittag</div>
-        ${r?`<div style="font-size:12px;line-height:1.4;color:var(--text);margin:4px 0;flex:1;font-weight:500;">${typeIcon(r.type)} ${escHtml(r.name)}</div>
-             <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearSlot('${day}',${wt})" style="background:none;border:none;color:var(--muted);font-size:16px;padding:0;line-height:1;">×</button></div>`
-          :`<div style="font-size:22px;color:var(--border);text-align:center;margin:auto;">+</div>`}
+        ${r?`<div style="font-size:12px;line-height:1.3;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div>
+             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearSlot('${day}',${wt})" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;line-height:1;">×</button></div>`
+          :`<div style="font-size:18px;color:var(--border);text-align:center;">+</div>`}
       </div>
     </div>`;
   }).join('');
