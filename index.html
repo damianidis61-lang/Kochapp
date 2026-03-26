@@ -153,25 +153,25 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
 
     <!-- WOCHENPLAN -->
     <div id="page-wochenplan" class="page">
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
         <button class="sub-btn active" id="wp-tab-mittag" onclick="showWpTab('mittag')">🍽️ Mittag</button>
         <button class="sub-btn" id="wp-tab-vesper" onclick="showWpTab('vesper')">🍎 Vesper</button>
-        <button class="sub-btn" id="wp-tab-einkauf" onclick="showWpTab('einkauf')">🛒 Einkauf</button>
+        <div id="wp-tab-einkauf" style="display:none;"></div>
       </div>
       <div id="wp-mittag">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="display:flex;gap:8px;">
-            <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
-            <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
-          </div>
-          <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openAutoPlan()">Planen →</button>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;background:var(--surface);border-radius:12px;padding:8px 12px;">
-          <button onclick="changeCalWeek(-1)" id="cal-prev" style="background:none;border:none;font-size:20px;color:var(--accent);cursor:pointer;padding:0 8px;">‹</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;background:var(--surface);border-radius:12px;padding:8px 12px;">
+          <button onclick="changeCalWeek(-1)" id="cal-prev" style="background:none;border:none;font-size:22px;color:var(--accent);cursor:pointer;padding:0 8px;">‹</button>
           <span id="cal-month" style="font-size:13px;font-weight:600;color:var(--text);"></span>
-          <button onclick="changeCalWeek(1)" id="cal-next" style="background:none;border:none;font-size:20px;color:var(--accent);cursor:pointer;padding:0 8px;">›</button>
+          <button onclick="changeCalWeek(1)" id="cal-next" style="background:none;border:none;font-size:22px;color:var(--accent);cursor:pointer;padding:0 8px;">›</button>
         </div>
-        <div id="week-grid"></div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
+          <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:stretch;">
+          <div id="week-grid" style="flex:1;"></div>
+          <button class="btn btn-primary" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:12px 8px;font-size:12px;border-radius:12px;white-space:nowrap;">Planen →</button>
+        </div>
       </div>
       <div id="wp-vesper" style="display:none;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -196,9 +196,12 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
     <!-- KOCHBUCH -->
     <div id="page-kochbuch" class="page">
       <div id="kb-kategorien">
-        <div style="position:relative;margin-bottom:14px;">
-          <input type="text" id="kb-global-search" placeholder="🔍 Rezept suchen… z.B. Nudeln Hühnchen" oninput="globalKbSearch(this.value)" style="padding-right:42px;">
-          <button onclick="showSearchInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#1a1108;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">ℹ</button>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <div style="position:relative;flex:1;">
+            <input type="text" id="kb-global-search" placeholder="🔍 Rezept suchen… z.B. Nudeln Hühnchen" oninput="globalKbSearch(this.value)" style="padding-right:42px;margin-bottom:0;">
+            <button onclick="showSearchInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#1a1108;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">ℹ</button>
+          </div>
+          <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;white-space:nowrap;" onclick="showAddFromKategorienMain()">+ Neu</button>
         </div>
         <div id="kb-global-results" style="display:none;"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -230,9 +233,8 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
       </div>
       <div id="kb-rezepte" style="display:none;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <button class="btn btn-ghost" style="padding:8px 14px;" onclick="backToKategorien()">← Zurück</button>
-          <h2 class="serif" id="kb-kategorie-titel" style="font-size:20px;color:var(--accent);flex:1;"></h2>
-          <button class="btn btn-primary" id="kb-add-btn" style="font-size:12px;padding:8px 14px;" onclick="showAddFromKategorie()">+ Hinzufügen</button>
+          <h2 class="serif" id="kb-kategorie-titel" style="font-size:18px;color:var(--accent);flex:1;"></h2>
+          <button class="btn btn-primary" id="kb-add-btn" style="font-size:12px;padding:8px 14px;" onclick="showAddFromKategorie()">+ Neu</button>
         </div>
         <div style="position:relative;margin-bottom:14px;">
           <input type="text" id="kb-search" placeholder="🔍 Suchen… z.B. Nudeln Hühnchen" oninput="filterKbRecipes(this.value)" style="margin-bottom:0;padding-right:42px;">
@@ -264,7 +266,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
   </main>
 
   <div class="bottom-bar">
-    <button class="bottom-btn" id="btn-home" onclick="goHome()" style="padding:10px 14px;"><span style="font-size:24px;">🏠</span></button>
+    <button class="bottom-btn" id="btn-home" onclick="handleBack()" style="padding:10px 14px;"><span style="font-size:24px;" id="btn-home-icon">🏠</span></button>
     <button class="bottom-btn" id="btn-wochenplan" onclick="showMain('wochenplan')"><span style="font-size:18px;">📅</span> Woche</button>
     <button class="bottom-btn" id="btn-kochbuch" onclick="showMain('kochbuch')"><span style="font-size:18px;">📖</span> Kochbuch</button>
     <button class="bottom-btn" id="btn-einkauf-b" onclick="showMain('einkauf')"><span style="font-size:18px;">🛒</span> Einkauf</button>
@@ -331,14 +333,26 @@ function showPage(page){
     if(el)el.classList.toggle('active',p===page);
   });
   // update bottom bar
-  ['btn-home','btn-wochenplan','btn-kochbuch'].forEach(b=>{
+  ['btn-home','btn-wochenplan','btn-kochbuch','btn-einkauf-b'].forEach(b=>{
     const el=document.getElementById(b);if(el)el.classList.remove('active');
   });
   if(page==='start')document.getElementById('btn-home')?.classList.add('active');
   if(page==='wochenplan')document.getElementById('btn-wochenplan')?.classList.add('active');
   if(page==='kochbuch')document.getElementById('btn-kochbuch')?.classList.add('active');
 }
-function goHome(){showPage('start');}
+function goHome(){showPage('start');updateHomeBtn();}
+let navStack=[];
+function pushNav(fn){navStack.push(fn);}
+function handleBack(){
+  if(navStack.length>0){navStack.pop()();}
+  else{goHome();}
+  updateHomeBtn();
+}
+function updateHomeBtn(){
+  const icon=document.getElementById('btn-home-icon');
+  if(!icon)return;
+  icon.textContent=navStack.length>0?'←':'🏠';
+}
 function showMain(section){
   if(section==='einkauf'){showPage('wochenplan');showWpTab('einkauf');return;}
   showPage(section);
@@ -350,8 +364,13 @@ function showWpTab(tab){
     const el=document.getElementById('wp-'+t);if(el)el.style.display=t===tab?'block':'none';
     const btn=document.getElementById('wp-tab-'+t);if(btn)btn.classList.toggle('active',t===tab);
   });
+  // update bottom bar
+  ['btn-home','btn-wochenplan','btn-kochbuch','btn-einkauf-b'].forEach(b=>{
+    const el=document.getElementById(b);if(el)el.classList.remove('active');
+  });
+  if(tab==='einkauf'){renderShopping();document.getElementById('btn-einkauf-b')?.classList.add('active');}
+  else{document.getElementById('btn-wochenplan')?.classList.add('active');}
   if(tab==='vesper')renderVesper();
-  if(tab==='einkauf'){renderShopping();}
   if(tab==='mittag')renderWeek();
 }
 // Kochbuch navigation
@@ -384,6 +403,8 @@ function globalKbSearch(q){
     :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><p>Keine Rezepte gefunden für "${q}"</p></div>`;
 }
 function showKategorie(kat){
+  pushNav(()=>{backToKategorien();});
+  updateHomeBtn();
   currentKbKat=kat;
   const cat=KB_CATEGORIES[kat];
   document.getElementById('kb-kategorien').style.display='none';
@@ -393,6 +414,7 @@ function showKategorie(kat){
   renderKbRecipes(cat);
 }
 function backToKategorien(){
+  navStack=[];updateHomeBtn();
   const inp=document.getElementById('kb-global-search');
   if(inp)inp.value='';
   const res=document.getElementById('kb-global-results');
@@ -422,6 +444,11 @@ function filterKbRecipes(q){
   document.getElementById('kb-recipe-list').innerHTML=filtered.length
     ?filtered.map(r=>recipeCardHTML(r,cat.ctx==='vesper'?'vesper':'mittag')).join('')
     :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><p>Keine Ergebnisse für "${q}"</p></div>`;
+}
+function showAddFromKategorienMain(){
+  // Default to mittag wenn keine Kategorie gewählt
+  if(!currentKbKat)currentKbKat='fleisch';
+  showAddFromKategorie();
 }
 function showAddFromKategorie(){
   if(!currentKbKat)return;
@@ -536,6 +563,8 @@ Max 5 Schritte auf Deutsch.`}]}]})});
 }
 // showRecipeDetail from kochbuch
 function showKbRecipeDetail(id,ctx){
+  pushNav(()=>{backToKbList(ctx);});
+  updateHomeBtn();
   const pool=ctx==='vesper'?vesperRecipes:recipes;
   const r=pool.find(x=>x.id===id);if(!r)return;
   const base=r.servings||2,factor=1;
@@ -545,7 +574,7 @@ function showKbRecipeDetail(id,ctx){
   document.getElementById('kb-search').style.display='none';
   const det=document.getElementById(detId);det.style.display='block';
   const dd=TYPES[r.type]||TYPES.vegetarian;
-  det.innerHTML=`<button class="btn btn-ghost" style="margin-bottom:18px;" onclick="backToKbList('${ctx}')">← Zurück</button>
+  det.innerHTML=`
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
       <div style="width:72px;height:72px;border-radius:16px;background:${dd.color}22;display:flex;align-items:center;justify-content:center;font-size:42px;flex-shrink:0;">${ctx==='vesper'?'🍎':dd.icon}</div>
       <div><h2 class="serif" style="font-size:24px;margin-bottom:4px;">${escHtml(r.name)}</h2>
@@ -568,12 +597,20 @@ function showKbRecipeDetail(id,ctx){
 function backToKbList(ctx){
   const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
-  document.getElementById(detId).style.display='none';
-  document.getElementById(formId).style.display='none';
-  document.getElementById('kb-recipe-list').style.display='block';
-  document.getElementById('kb-add-btn').style.display='';
-  document.getElementById('kb-search').style.display='';
-  if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
+  // hide detail and form
+  const det=document.getElementById(detId);
+  if(det){det.style.display='none';det.innerHTML='';}
+  const form=document.getElementById(formId);
+  if(form){form.style.display='none';form.innerHTML='';}
+  // show list and toolbar
+  const list=document.getElementById('kb-recipe-list');
+  if(list)list.style.display='block';
+  const addBtn=document.getElementById('kb-add-btn');if(addBtn)addBtn.style.display='';
+  const srch=document.getElementById('kb-search');if(srch)srch.style.display='';
+  // always re-render to make sure list is populated
+  if(currentKbKat){
+    renderKbRecipes(KB_CATEGORIES[currentKbKat]);
+  }
 }
 function editKbRecipe(id,ctx){
   const pool=ctx==='vesper'?vesperRecipes:recipes;
@@ -595,7 +632,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v9.1';
+  const VERSION='v9.3';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
