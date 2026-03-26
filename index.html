@@ -111,6 +111,7 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
     <p style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.6;">🔒 Beide Keys werden nur lokal gespeichert.<br>Anthropic: <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--accent);text-decoration:none;">console.anthropic.com/keys</a></p>
     <div id="api-error" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none;">⚠️ Bitte beide API-Keys eingeben.</div>
     <button class="btn btn-primary" style="width:100%;margin-top:10px;font-size:15px;" onclick="startApp()">App starten →</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px;font-size:13px;" onclick="startDemo()">Demo starten</button>
     <div class="divider"></div>
     <p style="font-size:11px;color:var(--muted);text-align:center;line-height:1.7;">Gehostet auf GitHub Pages · Als App auf Homescreen speichern</p>
   </div>
@@ -158,12 +159,17 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
         <button class="sub-btn" id="wp-tab-einkauf" onclick="showWpTab('einkauf')">🛒 Einkauf</button>
       </div>
       <div id="wp-mittag">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div style="display:flex;gap:8px;">
             <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
             <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
           </div>
           <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;" onclick="openAutoPlan()">Planen →</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;background:var(--surface);border-radius:12px;padding:8px 12px;">
+          <button onclick="changeCalWeek(-1)" id="cal-prev" style="background:none;border:none;font-size:20px;color:var(--accent);cursor:pointer;padding:0 8px;">‹</button>
+          <span id="cal-month" style="font-size:13px;font-weight:600;color:var(--text);"></span>
+          <button onclick="changeCalWeek(1)" id="cal-next" style="background:none;border:none;font-size:20px;color:var(--accent);cursor:pointer;padding:0 8px;">›</button>
         </div>
         <div id="week-grid"></div>
       </div>
@@ -200,13 +206,13 @@ main{flex:1;padding:18px 16px 90px;overflow-y:auto;}
             <img src="icons/Steak.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
           </button>
           <button onclick="showKategorie('nudeln')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <div style="font-size:60px;line-height:1.1;">🍜</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Nudelgerichte</div>
+            <img src="icons/Spaghetti.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Nudelgerichte</div>
           </button>
           <button onclick="showKategorie('reis')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
             <img src="icons/Reis.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Reisgerichte</div>
           </button>
           <button onclick="showKategorie('suppen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
-            <div style="font-size:60px;line-height:1.1;">🥣</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Suppen</div>
+            <img src="icons/Suppe.png" style="width:70px;height:70px;object-fit:contain;"><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Suppen</div>
           </button>
           <button onclick="showKategorie('grillen')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
             <div style="font-size:60px;line-height:1.1;">🔥</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Grillen</div>
@@ -305,6 +311,13 @@ let JB_KEY='';
 async function jbLoad(){try{const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`,{headers:{'X-Master-Key':JB_KEY,'X-Bin-Meta':false}});if(!r.ok)return null;return await r.json();}catch(e){return null;}}
 async function jbSave(data){console.log('jbSave called, JB_KEY length:',JB_KEY.length);try{const r=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':JB_KEY},body:JSON.stringify(data)});console.log('jbSave status:',r.status);}catch(e){console.warn('JSONBin save failed',e);}}
 window.onload=async()=>{const k=localStorage.getItem('ka_key');const jk=localStorage.getItem('ka_jb');if(k&&jk){API_KEY=k;JB_KEY=jk;await loadAll();launchApp();}};
+function startDemo(){
+  API_KEY='demo';JB_KEY='demo';
+  recipes=defaultRecipes();vesperRecipes=defaultVesperRecipes();
+  shoppingList=[];weekPlan={week1:{},week2:{}};vesperPlan={};
+  launchApp();
+  toast('Demo-Modus — Änderungen werden nicht gespeichert');
+}
 function startApp(){const k=document.getElementById('api-key-input').value.trim();const jk=document.getElementById('jb-key-input').value.trim();if(!k.startsWith('sk-')||!jk){document.getElementById('api-error').style.display='block';return;}API_KEY=k;JB_KEY=jk;localStorage.setItem('ka_key',k);localStorage.setItem('ka_jb',jk);loadAll().then(()=>launchApp());}
 function launchApp(){
   document.getElementById('api-screen').style.display='none';
@@ -338,7 +351,7 @@ function showWpTab(tab){
     const btn=document.getElementById('wp-tab-'+t);if(btn)btn.classList.toggle('active',t===tab);
   });
   if(tab==='vesper')renderVesper();
-  if(tab==='einkauf')renderShopping();
+  if(tab==='einkauf'){renderShopping();}
   if(tab==='mittag')renderWeek();
 }
 // Kochbuch navigation
@@ -419,6 +432,8 @@ function showAddFromKategorie(){
   document.getElementById('kb-recipe-list').style.display='none';
   document.getElementById('kb-recipe-detail').style.display='none';
   document.getElementById('kb-vesper-detail').style.display='none';
+  document.getElementById('kb-add-btn').style.display='none';
+  document.getElementById('kb-search').style.display='none';
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   renderKbAddForm(ctx,formId);
   document.getElementById(formId).style.display='block';
@@ -479,9 +494,18 @@ function backFromKbForm(ctx){
 }
 function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:''});renderKbAddForm(ctx,formId);}
 function addStepRowKb(ctx,formId){syncFields();formData.steps.push('');renderKbAddForm(ctx,formId);}
+function autoAssignKategorie(r,ctx){
+  if(ctx==='vesper')return;
+  const text=(r.name+' '+(r.tags||[]).join(' ')+' '+(r.ingredients||[]).map(i=>i.name).join(' ')).toLowerCase();
+  if(/back|kuchen|torte|brot|muffin|cookie|keks/.test(text)&&!r.tags.includes('Backen'))r.tags.push('Backen');
+  if(/grill|bbq|barbecue/.test(text)&&!r.tags.includes('Grillen'))r.tags.push('Grillen');
+  if(/ofen|auflauf|überbacken/.test(text)&&!r.tags.includes('Ofen'))r.tags.push('Ofen');
+  if(/suppe|eintopf|brühe/.test(text)&&!r.tags.includes('Suppe'))r.tags.push('Suppe');
+}
 function saveRecipeKb(ctx,formId){
   syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}
   const r={id:(ctx==='vesper'?'v':'r')+Date.now(),name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
+  autoAssignKategorie(r,ctx);
   if(formData.editMode){
     if(ctx==='vesper'){const idx=vesperRecipes.findIndex(x=>x.id===r.id);if(idx>=0)vesperRecipes[idx]=r;}
     else{const idx=recipes.findIndex(x=>x.id===r.id);if(idx>=0)recipes[idx]=r;}
@@ -517,6 +541,8 @@ function showKbRecipeDetail(id,ctx){
   const base=r.servings||2,factor=1;
   const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
   document.getElementById('kb-recipe-list').style.display='none';
+  document.getElementById('kb-add-btn').style.display='none';
+  document.getElementById('kb-search').style.display='none';
   const det=document.getElementById(detId);det.style.display='block';
   const dd=TYPES[r.type]||TYPES.vegetarian;
   det.innerHTML=`<button class="btn btn-ghost" style="margin-bottom:18px;" onclick="backToKbList('${ctx}')">← Zurück</button>
@@ -541,8 +567,12 @@ function showKbRecipeDetail(id,ctx){
 }
 function backToKbList(ctx){
   const detId=ctx==='vesper'?'kb-vesper-detail':'kb-recipe-detail';
+  const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   document.getElementById(detId).style.display='none';
-  document.getElementById('kb-recipe-list').style.display='';
+  document.getElementById(formId).style.display='none';
+  document.getElementById('kb-recipe-list').style.display='block';
+  document.getElementById('kb-add-btn').style.display='';
+  document.getElementById('kb-search').style.display='';
   if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
 }
 function editKbRecipe(id,ctx){
@@ -565,7 +595,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v8.8';
+  const VERSION='v9.1';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -717,7 +747,7 @@ function showTab(tab){
   if(tab==='vesper')renderVesper();
   if(tab==='woche')renderWeek();
   if(tab==='rezepte')showSubTab(currentSubTab);
-  if(tab==='einkauf')renderShopping();
+  if(tab==='einkauf'){renderShopping();}
 }
 function updateAddButtons(tab, sub){
   const center=document.getElementById('btn-add-center');
@@ -1122,12 +1152,43 @@ function onTouchEnd(e){
 }
 document.addEventListener('touchmove',onTouchMove,{passive:false});
 document.addEventListener('touchend',onTouchEnd);
+// Kalender
 let currentWocheTab=1;
+let calendarOffset=0; // weeks offset from today
+
+function getWeekDates(offset){
+  const now=new Date();
+  const day=now.getDay()||7; // Mo=1
+  const monday=new Date(now);
+  monday.setDate(now.getDate()-day+1+(offset*7));
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(monday);
+    d.setDate(monday.getDate()+i);
+    return d;
+  });
+}
+function formatDate(d){return d.getDate()+'.'+(d.getMonth()+1)+'.';}
+function formatMonth(dates){
+  const months=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  const first=dates[0],last=dates[6];
+  if(first.getMonth()===last.getMonth()) return months[first.getMonth()]+' '+first.getFullYear();
+  return months[first.getMonth()]+'/'+months[last.getMonth()]+' '+first.getFullYear();
+}
 function showWocheTab(n){
   currentWocheTab=n;
   document.getElementById('woche-tab-1').className='sub-btn'+(n===1?' active':'');
   document.getElementById('woche-tab-2').className='sub-btn'+(n===2?' active':'');
   renderWeek();
+}
+function changeCalWeek(dir){
+  const newOffset=calendarOffset+dir;
+  // limit to -4 and +4 weeks (roughly one month each way)
+  if(newOffset<-4||newOffset>4)return;
+  calendarOffset=newOffset;
+  renderWeek();
+  // update button states
+  document.getElementById('cal-prev').style.opacity=calendarOffset<=-4?'.3':'1';
+  document.getElementById('cal-next').style.opacity=calendarOffset>=4?'.3':'1';
 }
 // Zutaten-Kategorie erkennen
 function detectCategory(r){
@@ -1143,13 +1204,19 @@ function detectCategory(r){
 }
 function renderWeek(){
   const plan=weekPlan[`week${currentWocheTab}`]||{};
-  document.getElementById('week-grid').innerHTML=DAYS.map(day=>{
+  const weekOffset=calendarOffset+(currentWocheTab-1);
+  const dates=getWeekDates(weekOffset);
+  // update month display
+  const monthEl=document.getElementById('cal-month');
+  if(monthEl)monthEl.textContent=formatMonth(dates)+(currentWocheTab===2?' · Woche 2':'');
+  document.getElementById('week-grid').innerHTML=DAYS.map((day,idx)=>{
     const ds=daySettings[day],isWD=WEEKDAYS.includes(day);
     const tl=isWD&&ds?(ds.maxMin?`⏱ max ${ds.maxMin} min`:''):'';
     const r=plan[day];
     const wt=currentWocheTab;
+    const dateStr=formatDate(dates[idx]);
     return`<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;">
-      <div style="width:36px;flex-shrink:0;"><div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div>${tl?`<div style="font-size:8px;color:var(--green);">${tl}</div>`:''}</div>
+      <div style="width:44px;flex-shrink:0;text-align:center;"><div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div><div style="font-size:10px;color:var(--muted);">${dateStr}</div>${tl?`<div style="font-size:8px;color:var(--green);">${tl}</div>`:''}</div>
       <div class="week-slot ${slotClass(r?.type)}" style="flex:1;" 
         data-drag="1" data-dtype="week" data-day="${day}" data-week="${wt}"
         onclick="openPicker('${day}',${wt})"
