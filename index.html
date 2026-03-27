@@ -55,7 +55,7 @@ header{padding:14px 18px 0;border-bottom:1.5px solid var(--border);background:va
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
 .nav-btn.active{background:var(--card);color:var(--accent);border-color:var(--border);}
 .nav-btn .ni{font-size:19px;}
-main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;}
+main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touch-action:pan-y;}
 .bottom-bar{width:100%;background:var(--bg);border-top:1.5px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;z-index:100;flex-shrink:0;}
 .bottom-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;transition:all .18s;}
 .bottom-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(240,165,0,.08);}
@@ -509,9 +509,27 @@ function renderKbAddForm(ctx,formId){
   const isV=ctx==='vesper';
   const _fd=document.getElementById(formId);
   _fd.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <h2 class="serif" style="font-size:22px;">${formData.editMode?(isV?'Vesper bearbeiten':'Rezept bearbeiten'):(isV?'Neues Vesper-Rezept':'Neues Rezept')}</h2>
-      <button class="btn btn-ghost" onclick="backFromKbForm('${ctx}')">Abbrechen</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="toggleFormInfo('form-info-panel')" style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#1a1108;border:none;font-size:13px;font-weight:700;cursor:pointer;">ℹ</button>
+        <button class="btn btn-ghost" onclick="backFromKbForm('${ctx}')">Abbrechen</button>
+      </div>
+    </div>
+    <div id="form-info-panel" style="display:none;background:var(--surface);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--border);">
+      <label class="label">Art des Gerichts</label>
+      <div class="type-toggle" style="margin-bottom:12px;">
+        <button class="type-btn ${formData.type==='vegetarian'?'sel-veg':''}" onclick="formData.type='vegetarian';renderKbAddForm('${ctx}','${formId}')">🥦 Veg.</button>
+        <button class="type-btn ${formData.type==='meat'?'sel-meat':''}" onclick="formData.type='meat';renderKbAddForm('${ctx}','${formId}')">🥩 Fleisch</button>
+        <button class="type-btn ${formData.type==='fish'?'sel-fish':''}" onclick="formData.type='fish';renderKbAddForm('${ctx}','${formId}')">🐟 Fisch</button>
+      </div>
+      ${isV?`<label class="label">Kategorie</label>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="type-btn ${(formData.vesperKat||'salzig')==='salzig'?'sel-veg':''}" onclick="formData.vesperKat='salzig';renderKbAddForm('${ctx}','${formId}')">🧀 Salzig</button>
+        <button class="type-btn ${(formData.vesperKat||'salzig')==='suess'?'sel-meat':''}" onclick="formData.vesperKat='suess';renderKbAddForm('${ctx}','${formId}')">🍰 Süß</button>
+      </div>`:''}
+      <label class="label">Tags</label>
+      <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:0;">
     </div>
     <div onclick="document.getElementById('photo-input-kb-${ctx}').click()"
       style="width:100%;height:120px;border-radius:16px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:16px;overflow:hidden;position:relative;background:${formData.image?`url(${formData.image}) center/cover`:'var(--surface)'};">
@@ -519,25 +537,13 @@ function renderKbAddForm(ctx,formId){
       <div id="ai-overlay-kb-${ctx}" style="display:none;position:absolute;inset:0;background:rgba(245,240,232,.9);align-items:center;justify-content:center;flex-direction:column;gap:10px;"><div class="spinner"></div><div style="font-size:13px;color:var(--accent);font-weight:600;">KI analysiert…</div></div>
     </div>
     <input type="file" id="photo-input-kb-${ctx}" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoKb(event,'${ctx}')">
-    <label class="label">Art des Gerichts</label>
-    <div class="type-toggle">
-      <button class="type-btn ${formData.type==='vegetarian'?'sel-veg':''}" onclick="formData.type='vegetarian';renderKbAddForm('${ctx}','${formId}')">🥦 Veg.</button>
-      <button class="type-btn ${formData.type==='meat'?'sel-meat':''}" onclick="formData.type='meat';renderKbAddForm('${ctx}','${formId}')">🥩 Fleisch</button>
-      <button class="type-btn ${formData.type==='fish'?'sel-fish':''}" onclick="formData.type='fish';renderKbAddForm('${ctx}','${formId}')">🐟 Fisch</button>
-    </div>
-    ${isV?`<label class="label">Kategorie</label>
-    <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button class="type-btn ${(formData.vesperKat||'salzig')==='salzig'?'sel-veg':''}" onclick="formData.vesperKat='salzig';renderKbAddForm('${ctx}','${formId}')">🧀 Salzig</button>
-      <button class="type-btn ${(formData.vesperKat||'salzig')==='suess'?'sel-meat':''}" onclick="formData.vesperKat='suess';renderKbAddForm('${ctx}','${formId}')">🍰 Süß</button>
-    </div>`:''}
     <label class="label">Rezeptname *</label>
     <input type="text" id="f-name" value="${escHtml(formData.name)}" placeholder="${isV?'z.B. Apfel mit Käse':'z.B. Spaghetti Bolognese'}" style="margin-bottom:12px;">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
       <div><label class="label">Kochzeit</label><input type="text" id="f-time" value="${escHtml(formData.time)}" placeholder="30 min"></div>
       <div><label class="label">Portionen</label><input type="number" id="f-servings" value="${formData.servings}" min="1"></div>
     </div>
-    <label class="label">Tags</label>
-    <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:16px;">
+
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <h3 style="font-size:14px;font-weight:600;">Zutaten</h3>
@@ -551,9 +557,9 @@ function renderKbAddForm(ctx,formId){
     <div class="card" style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <h3 style="font-size:14px;font-weight:600;">👩‍🍳 Schritte</h3>
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addStepRowKb('${ctx}','${formId}')">+ Schritt</button>
       </div>
       <div id="step-rows">${formData.steps.map((s,i)=>stepRowHTML(i,s,ctx,true,formId)).join('')}</div>
+      <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;width:100%;margin-top:6px;" onclick="addStepRowKb('${ctx}','${formId}')">+ Schritt hinzufügen</button>
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipeKb('${ctx}','${formId}')">Rezept speichern ✓</button>`;
   setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=0;},30);
@@ -735,7 +741,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.6';
+  const VERSION='v0.11.8';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -895,6 +901,10 @@ function updateAddButtons(tab, sub){
 }
 let toastTimer;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',2400);}
+function toggleFormInfo(id){
+  const el=document.getElementById(id);
+  if(el)el.style.display=el.style.display==='none'?'block':'none';
+}
 function toggleRecipeInfo(id){
   const el=document.getElementById(id);
   if(el)el.style.display=el.style.display==='none'?'block':'none';
@@ -911,9 +921,9 @@ function stepTouchStart(e,i){
   const rect=el.getBoundingClientRect();
   stepTouchOffY=touch.clientY-rect.top;
   stepTouchClone=el.cloneNode(true);
-  stepTouchClone.style.cssText=`position:fixed;width:${rect.width}px;opacity:.9;pointer-events:none;z-index:9999;left:${rect.left}px;top:${touch.clientY-stepTouchOffY}px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:none;`;
+  stepTouchClone.style.cssText=`position:fixed;width:${rect.width}px;opacity:.95;pointer-events:none;z-index:9999;left:${rect.left}px;top:${touch.clientY-stepTouchOffY}px;border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,.35);transform:scale(1.03);transition:none;border:2px solid var(--accent);`;
   document.body.appendChild(stepTouchClone);
-  el.style.opacity='.3';
+  el.style.opacity='.15';
   e.preventDefault();
 }
 function stepTouchMove(e){
@@ -1136,15 +1146,15 @@ function renderAddForm(ctx){
       <div><label class="label">Kochzeit</label><input type="text" id="f-time" value="${escHtml(formData.time)}" placeholder="30 min"></div>
       <div><label class="label">Portionen</label><input type="number" id="f-servings" value="${formData.servings}" min="1"></div>
     </div>
-    <label class="label">Tags</label>
-    <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:16px;">
+
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:14px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRow('${ctx}')">+ Zutat</button></div>
       <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx,true,formId)).join('')}</div>
     </div>
     <div class="card" style="margin-bottom:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:14px;font-weight:600;">👩‍🍳 Schritte</h3><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addStepRow('${ctx}')">+ Schritt</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:14px;font-weight:600;">👩‍🍳 Schritte</h3></div>
       <div id="step-rows">${formData.steps.map((s,i)=>stepRowHTML(i,s,ctx)).join('')}</div>
+      <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;width:100%;margin-top:6px;" onclick="addStepRow('${ctx}')">+ Schritt hinzufügen</button>
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipe('${ctx}')">Rezept speichern ✓</button>`;
 }
@@ -1158,14 +1168,18 @@ function ingRowHTML(i,ing,ctx,isKb,formId){
       <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 2px;line-height:1;">×</button>
     </div>`;
   }
-  return`<div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;margin-bottom:7px;">
-    <input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value">
+  const parts=(ing.amount||'').match(/^([\d.,\/]+)?\s*(.*)$/)||['','',''];
+  const qty=ing.qty!==undefined?ing.qty:parts[1]||'';
+  const unit=ing.unit!==undefined?ing.unit:parts[2]||'';
+  return`<div style="display:grid;grid-template-columns:55px 65px 1fr auto;gap:5px;margin-bottom:7px;">
+    <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit" style="text-align:center;">
+    <input type="text" value="${escHtml(unit)}" placeholder="Einheit" oninput="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value" style="text-align:center;">
     <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value">
     <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button>
   </div>`;
 }
-function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);touch-action:pan-y;"><div ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="color:var(--muted);font-size:22px;padding-top:8px;flex-shrink:0;touch-action:none;cursor:grab;padding-left:2px;padding-right:4px;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;touch-action:pan-y;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
-function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;formData.tags=document.getElementById('f-tags').value;}
+function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);touch-action:pan-y;"><div ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="color:var(--accent);font-size:22px;padding-top:8px;flex-shrink:0;touch-action:none;cursor:grab;padding-left:2px;padding-right:4px;user-select:none;">↕</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;touch-action:pan-y;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
+function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;const tg=document.getElementById('f-tags');if(tg)formData.tags=tg.value;}
 function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderAddForm(ctx);}
 function removeIng(i,ctx){syncFields();formData.ingredients.splice(i,1);renderAddForm(ctx);}
 function addStepRow(ctx){syncFields();formData.steps.push('');renderAddForm(ctx);}
