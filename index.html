@@ -51,7 +51,6 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 #app{max-width:520px;margin:0 auto;height:100vh;height:-webkit-fill-available;display:flex;flex-direction:column;overflow:hidden;}
 header{padding:14px 18px 0;border-bottom:1.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;}
 
-
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
 .nav-btn.active{background:var(--card);color:var(--accent);border-color:var(--border);}
 .nav-btn .ni{font-size:19px;}
@@ -508,6 +507,7 @@ function showAddFromKategorie(){
 function renderKbAddForm(ctx,formId){
   const isV=ctx==='vesper';
   const _fd=document.getElementById(formId);
+  const _panelOpen=_fd?.querySelector('#form-info-panel')?.style.display==='block';
   _fd.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <h2 class="serif" style="font-size:22px;">${formData.editMode?(isV?'Vesper bearbeiten':'Rezept bearbeiten'):(isV?'Neues Vesper-Rezept':'Neues Rezept')}</h2>
@@ -531,12 +531,20 @@ function renderKbAddForm(ctx,formId){
       <label class="label">Tags</label>
       <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:0;">
     </div>
-    <div onclick="document.getElementById('photo-input-kb-${ctx}').click()"
-      style="width:100%;height:120px;border-radius:16px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-bottom:16px;overflow:hidden;position:relative;background:${formData.image?`url(${formData.image}) center/cover`:'var(--surface)'};">
-      ${formData.image?`<div style="position:absolute;bottom:8px;right:8px;background:var(--green);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;">✓ KI analysiert</div>`:`<div style="font-size:28px;margin-bottom:4px;">📷</div><div style="font-size:13px;color:var(--muted);">Foto für KI-Analyse</div>`}
-      <div id="ai-overlay-kb-${ctx}" style="display:none;position:absolute;inset:0;background:rgba(245,240,232,.9);align-items:center;justify-content:center;flex-direction:column;gap:10px;"><div class="spinner"></div><div style="font-size:13px;color:var(--accent);font-weight:600;">KI analysiert…</div></div>
+    <div style="margin-bottom:16px;">
+      <div onclick="document.getElementById('photo-input-kb-${ctx}').click()"
+        style="width:100%;height:100px;border-radius:16px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;background:${formData.image?`url(${formData.image}) center/cover`:'var(--surface)'};">
+        ${formData.image?`<div style="position:absolute;bottom:8px;right:8px;background:var(--green);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;">✓ KI analysiert</div>`:`<div style="font-size:24px;margin-bottom:4px;">📷</div><div style="font-size:13px;color:var(--muted);">Foto für KI-Analyse</div>`}
+        <div id="ai-overlay-kb-${ctx}" style="display:none;position:absolute;inset:0;background:rgba(245,240,232,.9);align-items:center;justify-content:center;flex-direction:column;gap:10px;"><div class="spinner"></div><div style="font-size:13px;color:var(--accent);font-weight:600;">KI analysiert…</div></div>
+      </div>
+      ${formData.image?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        <button class="btn btn-ghost" style="font-size:12px;padding:8px;" onclick="document.getElementById('photo-input-kb-zutaten-${ctx}').click()">📷 Zutaten neu</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:8px;" onclick="document.getElementById('photo-input-kb-schritte-${ctx}').click()">📷 Zubereitung neu</button>
+      </div>`:''}
     </div>
-    <input type="file" id="photo-input-kb-${ctx}" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoKb(event,'${ctx}')">
+    <input type="file" id="photo-input-kb-${ctx}" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoKb(event,'${ctx}','all')">
+    <input type="file" id="photo-input-kb-zutaten-${ctx}" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoKb(event,'${ctx}','ingredients')">
+    <input type="file" id="photo-input-kb-schritte-${ctx}" accept="image/*" capture="environment" style="display:none;" onchange="handlePhotoKb(event,'${ctx}','steps')">
     <label class="label">Rezeptname *</label>
     <input type="text" id="f-name" value="${escHtml(formData.name)}" placeholder="${isV?'z.B. Apfel mit Käse':'z.B. Spaghetti Bolognese'}" style="margin-bottom:12px;">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
@@ -562,7 +570,12 @@ function renderKbAddForm(ctx,formId){
       <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;width:100%;margin-top:6px;" onclick="addStepRowKb('${ctx}','${formId}')">+ Schritt hinzufügen</button>
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipeKb('${ctx}','${formId}')">Rezept speichern ✓</button>`;
-  setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=0;},30);
+  setTimeout(()=>{
+    const f=document.getElementById(formId);
+    if(f){
+      if(_panelOpen){const p=f.querySelector('#form-info-panel');if(p)p.style.display='block';}
+    }
+  },30);
 }
 function backFromKbForm(ctx){
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
@@ -575,11 +588,46 @@ function backFromKbForm(ctx){
   const srchWrap=document.querySelector('#kb-rezepte > div:nth-child(2)');if(srchWrap)srchWrap.style.display='';
   if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
 }
-function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderKbAddForm(ctx,formId);}
-function addIngGroupKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:'',group:'',_isGroup:true});renderKbAddForm(ctx,formId);}
-function addStepRowKb(ctx,formId){syncFields();formData.steps.push('');renderKbAddForm(ctx,formId);}
-function removeIngKb(i,ctx,formId){syncFields();formData.ingredients.splice(i,1);renderKbAddForm(ctx,formId);}
-function removeStepKb(i,ctx,formId){syncFields();formData.steps.splice(i,1);renderKbAddForm(ctx,formId);}
+function addIngRowKb(ctx,formId){
+  syncFields();
+  const fd=document.getElementById(formId);
+  const scroll=fd?fd.scrollTop:0;
+  formData.ingredients.push({name:'',amount:'',group:''});
+  renderKbAddForm(ctx,formId);
+  setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=scroll+999;},30);
+}
+function addIngGroupKb(ctx,formId){
+  syncFields();
+  const fd=document.getElementById(formId);
+  const scroll=fd?fd.scrollTop:0;
+  formData.ingredients.push({name:'',amount:'',group:'',_isGroup:true});
+  renderKbAddForm(ctx,formId);
+  setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=scroll+999;},30);
+}
+function addStepRowKb(ctx,formId){
+  syncFields();
+  const fd=document.getElementById(formId);
+  const scroll=fd?fd.scrollTop:0;
+  formData.steps.push('');
+  renderKbAddForm(ctx,formId);
+  setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=scroll+999;},30);
+}
+function removeIngKb(i,ctx,formId){
+  syncFields();
+  const fd=document.getElementById(formId);
+  const scroll=fd?fd.scrollTop:0;
+  formData.ingredients.splice(i,1);
+  renderKbAddForm(ctx,formId);
+  setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=scroll;},30);
+}
+function removeStepKb(i,ctx,formId){
+  syncFields();
+  const fd=document.getElementById(formId);
+  const scroll=fd?fd.scrollTop:0;
+  formData.steps.splice(i,1);
+  renderKbAddForm(ctx,formId);
+  setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=scroll;},30);
+}
 function autoAssignKategorie(r,ctx){
   if(ctx==='vesper')return;
   const text=(r.name+' '+(r.tags||[]).join(' ')+' '+(r.ingredients||[]).map(i=>i.name).join(' ')).toLowerCase();
@@ -613,7 +661,7 @@ Trotzdem speichern?`))return;
   }
   saveAll().then(()=>backFromKbForm(ctx)).catch(()=>backFromKbForm(ctx));
 }
-async function handlePhotoKb(e,ctx){
+async function handlePhotoKb(e,ctx,mode){
   const file=e.target.files[0];if(!file)return;
   formData.image=URL.createObjectURL(file);
   const ov=document.getElementById('ai-overlay-kb-'+ctx);if(ov)ov.style.display='flex';
@@ -630,9 +678,10 @@ WICHTIG:
 - Wenn keine Gruppen vorhanden, lasse "group" leer ("").
 - Max 8 Schritte auf Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
-      if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
-      if(p.ingredients?.length){
-        // Gruppen als _isGroup Elemente einfügen
+      if(!mode||mode==='all'){
+        if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
+      }
+      if((!mode||mode==='all'||mode==='ingredients')&&p.ingredients?.length){
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
@@ -640,7 +689,7 @@ WICHTIG:
         });
         formData.ingredients=ings;
       }
-      if(p.steps?.length)formData.steps=p.steps;
+      if((!mode||mode==='all'||mode==='steps')&&p.steps?.length)formData.steps=p.steps;
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderKbAddForm(ctx,formId);
   };reader.readAsDataURL(file);
@@ -741,7 +790,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.8';
+  const VERSION='v0.11.9';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1191,9 +1240,10 @@ async function handlePhoto(e,ctx){
   reader.onload=async(ev)=>{const b64=ev.target.result.split(',')[1];
     try{const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:`Analysiere dieses Essensfoto. Antworte NUR mit validem JSON:\n{"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge"}],"steps":["Schritt"]}\nMax 5 Schritte auf Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
-      if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
-      if(p.ingredients?.length){
-        // Gruppen als _isGroup Elemente einfügen
+      if(!mode||mode==='all'){
+        if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
+      }
+      if((!mode||mode==='all'||mode==='ingredients')&&p.ingredients?.length){
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
@@ -1201,7 +1251,7 @@ async function handlePhoto(e,ctx){
         });
         formData.ingredients=ings;
       }
-      if(p.steps?.length)formData.steps=p.steps;
+      if((!mode||mode==='all'||mode==='steps')&&p.steps?.length)formData.steps=p.steps;
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderAddForm(ctx);if(formData.aiError){const el=document.getElementById('ai-error-'+ctx);if(el){el.style.display='block';el.textContent=formData.aiError;}}
   };reader.readAsDataURL(file);
