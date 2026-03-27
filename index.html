@@ -450,9 +450,11 @@ function backToKategorien(){
 function renderKbRecipes(cat){
   let pool, filtered;
   if(cat.label==='Zuletzt hinzugefügt'){
-    const all=[...recipes,...vesperRecipes];
-    const sorted=all.sort((a,b)=>String(b.id).localeCompare(String(a.id)));
-    filtered=sorted.slice(0,10);
+    const allM=recipes.map(r=>({...r,_ctx:'mittag'}));
+    const allV=vesperRecipes.map(r=>({...r,_ctx:'vesper'}));
+    const all=[...allM,...allV];
+    all.sort((a,b)=>String(b.id).localeCompare(String(a.id)));
+    filtered=all.slice(0,10);
     pool=all;
   } else {
     pool=cat.ctx==='vesper'?vesperRecipes:recipes;
@@ -733,7 +735,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v11.5';
+  const VERSION='v0.11.6';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -901,20 +903,23 @@ let stepDragIdx=null;
 let stepTouchDragIdx=null, stepTouchClone=null, stepTouchCtx=null, stepTouchIsKb=null, stepTouchFormId=null;
 function stepDragStart(e,i){stepDragIdx=i;e.dataTransfer.effectAllowed='move';}
 function stepDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+let stepTouchOffY=0;
 function stepTouchStart(e,i){
   stepTouchDragIdx=i;
   const el=e.currentTarget;
-  stepTouchClone=el.cloneNode(true);
+  const touch=e.touches[0];
   const rect=el.getBoundingClientRect();
-  stepTouchClone.style.cssText=`position:fixed;width:${rect.width}px;opacity:.85;pointer-events:none;z-index:9999;left:${rect.left}px;top:${rect.top}px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.2);`;
+  stepTouchOffY=touch.clientY-rect.top;
+  stepTouchClone=el.cloneNode(true);
+  stepTouchClone.style.cssText=`position:fixed;width:${rect.width}px;opacity:.9;pointer-events:none;z-index:9999;left:${rect.left}px;top:${touch.clientY-stepTouchOffY}px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:none;`;
   document.body.appendChild(stepTouchClone);
-  el.style.opacity='.35';
+  el.style.opacity='.3';
   e.preventDefault();
 }
 function stepTouchMove(e){
   if(!stepTouchClone)return;
   const t=e.touches[0];
-  stepTouchClone.style.top=(t.clientY-30)+'px';
+  stepTouchClone.style.top=(t.clientY-stepTouchOffY)+'px';
   e.preventDefault();
 }
 function stepTouchEnd(e,i,ctx,isKb,formId){
@@ -961,7 +966,7 @@ function stepDrop(e,targetIdx,ctx,isKb,formId){
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function parseMinutes(t){if(!t)return null;const m=t.match(/(\d+)/);return m?parseInt(m[1]):null;}
 function scaleAmount(amount,factor){if(!amount||factor===1)return amount;const m=amount.match(/^(\d+([.,]\d+)?)/);if(!m)return amount;const orig=parseFloat(m[1].replace(',','.'));const scaled=Math.round(orig*factor*10)/10;return amount.replace(m[1],scaled%1===0?String(scaled):String(scaled).replace('.',','));}
-function recipeCardHTML(r,ctx){return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showKbRecipeDetail('${r.id}','${ctx}')"><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
+function recipeCardHTML(r,ctx){const c=r._ctx||ctx;return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showKbRecipeDetail('${r.id}','${c}')"><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
 let currentVesperCol='salzig';
 const SYNONYMS={
   'nudeln':['pasta','spaghetti','penne','rigatoni','tagliatelle','fettuccine','linguine','farfalle','lasagne','nudel'],
@@ -1159,7 +1164,7 @@ function ingRowHTML(i,ing,ctx,isKb,formId){
     <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button>
   </div>`;
 }
-function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;cursor:grab;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);"><div style="color:var(--muted);font-size:18px;padding-top:10px;flex-shrink:0;touch-action:none;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
+function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);touch-action:pan-y;"><div ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="color:var(--muted);font-size:22px;padding-top:8px;flex-shrink:0;touch-action:none;cursor:grab;padding-left:2px;padding-right:4px;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;touch-action:pan-y;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
 function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;formData.tags=document.getElementById('f-tags').value;}
 function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderAddForm(ctx);}
 function removeIng(i,ctx){syncFields();formData.ingredients.splice(i,1);renderAddForm(ctx);}
