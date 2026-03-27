@@ -16,7 +16,7 @@
 <style>
 :root{--bg:#f5f0e8;--surface:#ede8de;--card:#fffdf8;--card2:#fdf8f0;--accent:#f0a500;--accent2:#e06c2a;--green:#5daa6f;--red:#d9534f;--text:#2a1f0a;--muted:#8a7a5a;--border:#d8cdb8;--shadow:0 2px 12px rgba(0,0,0,.08);--veg:#4caf50;--meat:#e07040;--fish:#2196f3;--vesper:#9c27b0;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overscroll-behavior:none;}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;min-height:-webkit-fill-available;}
 .serif{font-family:'Cormorant Garamond',serif;}
 input,textarea,select{background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'Outfit',sans-serif;font-size:15px;width:100%;outline:none;transition:border .2s;-webkit-appearance:none;}
@@ -31,7 +31,7 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 .card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
 .tag{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:12px;color:var(--muted);}
 .label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;}
-.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}#page-start.active{display:flex;flex-direction:column;}#page-wochenplan.active{display:flex;flex-direction:column;}#kb-kategorien.page-flex{display:flex;flex-direction:column;}
+.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}#page-start.active,#page-wochenplan.active,#page-kochbuch.active{flex:1;overflow:hidden;}#kb-kategorien.page-flex{display:flex;flex-direction:column;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;animation:fadeUp .2s;}
 .modal-box{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:24px;max-height:88vh;overflow-y:auto;border-top:2px solid var(--accent);}
@@ -55,7 +55,7 @@ nav{display:flex;gap:3px;}
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
 .nav-btn.active{background:var(--card);color:var(--accent);border-color:var(--border);}
 .nav-btn .ni{font-size:19px;}
-main{flex:1;padding:10px 12px 70px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+main{flex:1;padding:10px 12px 70px;overflow:hidden;display:flex;flex-direction:column;}
 .bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--bg);border-top:1.5px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;z-index:100;}
 .bottom-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;transition:all .18s;}
 .bottom-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(240,165,0,.08);}
@@ -125,7 +125,7 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;-webkit-overflow-scrolling:to
   </header>
   <main>
     <!-- STARTSEITE -->
-    <div id="page-start" class="page active" style="height:calc(100vh - 130px);">
+    <div id="page-start" class="page active" style="flex:1;display:flex;flex-direction:column;">
       <div style="display:flex;flex-direction:column;gap:12px;flex:1;padding-top:16px;">
         <button onclick="showMain('wochenplan')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:0 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;flex:1;">
           <div style="font-size:52px;">📅</div>
@@ -159,7 +159,7 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;-webkit-overflow-scrolling:to
     </div>
 
     <!-- WOCHENPLAN -->
-    <div id="page-wochenplan" class="page" style="height:calc(100vh - 130px);overflow:hidden;">
+    <div id="page-wochenplan" class="page" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
       <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
         <button class="sub-btn active" id="wp-tab-mittag" onclick="showWpTab('mittag')">🍽️ Mittag</button>
         <button class="sub-btn" id="wp-tab-vesper" onclick="showWpTab('vesper')">🍎 Vesper</button>
@@ -190,7 +190,7 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;-webkit-overflow-scrolling:to
           <button class="btn btn-primary" id="vesper-planen-btn" onclick="openVesperPlan()" style="writing-mode:vertical-rl;padding:14px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;">Planen</button>
         </div>
       </div>
-      <div id="wp-einkauf" style="display:none;">
+      <div id="wp-einkauf" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
         <div class="card" style="margin-bottom:16px;">
           <h3 style="font-size:14px;margin-bottom:10px;font-weight:600;">➕ Artikel hinzufügen</h3>
           <div style="display:grid;grid-template-columns:1fr 90px;gap:8px;margin-bottom:8px;">
@@ -199,13 +199,13 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;-webkit-overflow-scrolling:to
           </div>
           <button class="btn btn-primary" style="width:100%;" onclick="addManualItem()">Hinzufügen</button>
         </div>
-        <div id="shopping-list-container"></div>
+        <div id="shopping-list-container" style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
       </div>
     </div>
 
     <!-- KOCHBUCH -->
-    <div id="page-kochbuch" class="page">
-      <div id="kb-kategorien" style="height:calc(100vh - 130px);">
+    <div id="page-kochbuch" class="page" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <div id="kb-kategorien" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
           <div style="position:relative;flex:1;">
             <input type="text" id="kb-global-search" placeholder="🔍 Rezept suchen… z.B. Nudeln Hühnchen" oninput="globalKbSearch(this.value)" style="padding-right:42px;margin-bottom:0;">
@@ -289,6 +289,7 @@ main{flex:1;padding:10px 12px 70px;overflow-y:auto;-webkit-overflow-scrolling:to
   </div>
 </div>
 <div id="picker-modal" style="display:none;"></div>
+<div id="slot-detail-modal" style="display:none;"></div>
 <div id="autoplan-modal" style="display:none;"></div>
 <div id="vesperplan-modal" style="display:none;"></div>
 <div id="toast" class="toast" style="display:none;"></div>
@@ -671,7 +672,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v10.1';
+  const VERSION='v10.2';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1294,9 +1295,9 @@ function renderWeek(){
         <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;">${day}</div>
         <div style="font-size:10px;color:var(--muted);">${dateStr}</div>
       </div>
-      <div class="week-slot ${slotClass(r?.type)}" style="flex:1;align-self:stretch;" 
+      <div class="week-slot ${slotClass(r?.type)}" style="flex:1;align-self:stretch;position:relative;justify-content:center;" 
         data-drag="1" data-dtype="week" data-day="${day}" data-week="${wt}"
-        onclick="openPicker('${day}',${wt})"
+        onclick="openSlotDetail('${day}',${wt},'week',null)"
         draggable="true"
         ondragstart="onDragStart(event,'week','${day}',${wt},null)"
         ondragend="onDragEnd(event)"
@@ -1304,8 +1305,8 @@ function renderWeek(){
         ondragleave="onDragLeave(event)"
         ondrop="onDrop(event,'week','${day}',${wt},null)"
         ontouchstart="onTouchStart(event,'week','${day}',${wt},null)">
-        ${r?`<div style="font-size:12px;line-height:1.3;color:var(--text);font-weight:500;white-space:normal;line-height:1.4;">${escHtml(r.name)}</div>
-             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:10px;color:var(--muted);">⏱ ${r.time}</span><button onclick="event.stopPropagation();clearSlot('${day}',${wt})" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;line-height:1;">×</button></div>`
+        ${r?`<div style="font-size:12px;font-weight:500;color:var(--text);line-height:1.4;white-space:normal;">${escHtml(r.name)}</div>
+             <button onclick="event.stopPropagation();clearSlot('${day}',${wt})" style="position:absolute;top:3px;right:4px;background:none;border:none;color:var(--muted);font-size:12px;padding:0;line-height:1;opacity:.5;">×</button>`
           :`<div style="font-size:11px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:1px;">LEER</div>`}
       </div>
     </div>`;
@@ -1343,9 +1344,9 @@ function renderVesper(){
         <div style="font-size:10px;color:var(--muted);">${dateStr}</div>
       </div>
       <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-        <div class="week-slot ${rs?'vesper-slot':''}"
+        <div class="week-slot ${rs?'vesper-slot':''}" style="position:relative;justify-content:center;"
           data-drag="1" data-dtype="vesper" data-day="${day}" data-kat="salzig"
-          onclick="openVesperPicker('${day}','salzig')"
+          onclick="openSlotDetail('${day}',null,'vesper','salzig')"
           draggable="true"
           ondragstart="onDragStart(event,'vesper','${day}',null,'salzig')"
           ondragend="onDragEnd(event)"
@@ -1353,13 +1354,13 @@ function renderVesper(){
           ondragleave="onDragLeave(event)"
           ondrop="onDrop(event,'vesper','${day}',null,'salzig')"
           ontouchstart="onTouchStart(event,'vesper','${day}',null,'salzig')">
-          ${rs?`<div style="font-size:12px;line-height:1.3;color:var(--text);font-weight:500;white-space:normal;line-height:1.4;">${escHtml(rs.name)}</div>
-               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;"><span style="font-size:10px;color:var(--muted);">⏱ ${rs.time}</span><button onclick="event.stopPropagation();clearVesperSlot('${day}','salzig')" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;line-height:1;">×</button></div>`
+          ${rs?`<div style="font-size:12px;font-weight:500;color:var(--text);line-height:1.4;white-space:normal;">${escHtml(rs.name)}</div>
+               <button onclick="event.stopPropagation();clearVesperSlot('${day}','salzig')" style="position:absolute;top:3px;right:4px;background:none;border:none;color:var(--muted);font-size:12px;padding:0;opacity:.5;">×</button>`
             :`<div style="font-size:11px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:1px;">LEER</div>`}
         </div>
-        <div class="week-slot ${rs2?'vesper-slot':''}"
+        <div class="week-slot ${rs2?'vesper-slot':''}" style="position:relative;justify-content:center;"
           data-drag="1" data-dtype="vesper" data-day="${day}" data-kat="suess"
-          onclick="openVesperPicker('${day}','suess')"
+          onclick="openSlotDetail('${day}',null,'vesper','suess')"
           draggable="true"
           ondragstart="onDragStart(event,'vesper','${day}',null,'suess')"
           ondragend="onDragEnd(event)"
@@ -1367,8 +1368,8 @@ function renderVesper(){
           ondragleave="onDragLeave(event)"
           ondrop="onDrop(event,'vesper','${day}',null,'suess')"
           ontouchstart="onTouchStart(event,'vesper','${day}',null,'suess')">
-          ${rs2?`<div style="font-size:12px;line-height:1.3;color:var(--text);font-weight:500;white-space:normal;line-height:1.4;">${escHtml(rs2.name)}</div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;"><span style="font-size:10px;color:var(--muted);">⏱ ${rs2.time}</span><button onclick="event.stopPropagation();clearVesperSlot('${day}','suess')" style="background:none;border:none;color:var(--muted);font-size:14px;padding:0;line-height:1;">×</button></div>`
+          ${rs2?`<div style="font-size:12px;font-weight:500;color:var(--text);line-height:1.4;white-space:normal;">${escHtml(rs2.name)}</div>
+                <button onclick="event.stopPropagation();clearVesperSlot('${day}','suess')" style="position:absolute;top:3px;right:4px;background:none;border:none;color:var(--muted);font-size:12px;padding:0;opacity:.5;">×</button>`
             :`<div style="font-size:11px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:1px;">LEER</div>`}
         </div>
       </div>
@@ -1435,6 +1436,44 @@ function runVesperPlan(){
   });
   saveAll();closeVesperPlan();renderVesper();toast(`✓ Vesper für ${n} Tage geplant!`);
 }
+function openSlotDetail(day,week,type,kat){
+  let r=null;
+  if(type==='week'){
+    week=week||currentWocheTab;
+    r=(weekPlan[`week${week}`]||{})[day];
+  } else {
+    r=vesperPlan[day+'-'+(kat||'salzig')];
+  }
+  if(!r){
+    // leerer Slot → Picker öffnen
+    if(type==='week') openPicker(day,week);
+    else openVesperPicker(day,kat);
+    return;
+  }
+  // Rezept vorhanden → Detail-Modal
+  const dd=TYPES[r.type]||TYPES.vegetarian;
+  const modal=document.getElementById('slot-detail-modal');
+  modal.style.display='block';
+  modal.innerHTML=`<div class="modal-overlay" onclick="closeSlotDetail()" style="align-items:center;">
+    <div class="modal-box" onclick="event.stopPropagation()" style="border-radius:22px;max-height:80vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+        <div style="width:56px;height:56px;border-radius:14px;background:${dd.color}22;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">${dd.icon}</div>
+        <div><h2 class="serif" style="font-size:22px;margin-bottom:2px;">${escHtml(r.name)}</h2>
+        <div style="font-size:12px;color:var(--muted);">⏱ ${r.time} · 👤 ${r.servings} Port.</div></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">🧄 Zutaten</div>
+        ${r.ingredients.map(ing=>`<div style="display:flex;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);font-weight:500;min-width:70px;">${escHtml(ing.amount)}</span><span style="padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">👩‍🍳 Zubereitung</div>
+        ${r.steps.map((s,i)=>`<div style="display:flex;gap:10px;margin-bottom:10px;"><div class="step-num">${i+1}</div><p style="font-size:13px;line-height:1.6;padding-top:3px;">${escHtml(s)}</p></div>`).join('')}
+      </div>
+      <button class="btn btn-ghost" style="width:100%;" onclick="closeSlotDetail();${type==='week'?`openPicker('${day}',${week||'currentWocheTab'})`:`openVesperPicker('${day}','${kat||'salzig'}')`}">✏️ Ändern</button>
+    </div>
+  </div>`;
+}
+function closeSlotDetail(){const m=document.getElementById('slot-detail-modal');if(m)m.style.display='none';}
 function openPicker(day,week){week=week||currentWocheTab;const maxMin=daySettings[day]?.maxMin;const usedInWeek=Object.values(weekPlan[`week${week}`]||{}).map(r=>r?.id);const modal=document.getElementById('picker-modal');modal.style.display='block';modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()"><div class="serif" style="font-size:19px;margin-bottom:4px;">Rezept wählen</div><p style="font-size:12px;color:var(--muted);margin-bottom:16px;">${day} · Woche ${week}${maxMin?` · <span style="color:var(--green)">⏱ max ${maxMin} min</span>`:''}</p>${recipes.length?recipes.map(r=>{const mins=parseMinutes(r.time),ot=maxMin&&mins!==null&&mins>maxMin,used=usedInWeek.includes(r.id);return`<div class="card recipe-card" style="cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:13px;${ot||used?'opacity:.55':''}" onclick="assignSlot('${day}',${week},'${r.id}')"><div style="font-size:24px;">${typeIcon(r.type)}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${escHtml(r.name)}</div><div style="font-size:11px;color:${ot?'var(--red)':used?'var(--muted)':'var(--muted)'};">${r.time}${ot?' ⚠️':''}${used?' · bereits diese Woche':''}</div></div>${typeBadge(r.type)}</div>`;}).join(''):`<p style="color:var(--muted);text-align:center;padding:20px;">Noch keine Rezepte.</p>`}<button class="btn btn-ghost" style="width:100%;margin-top:10px;" onclick="closePicker()">Abbrechen</button></div></div>`;}
 function closePicker(){document.getElementById('picker-modal').style.display='none';}
 function assignSlot(day,week,rid){if(!weekPlan[`week${week}`])weekPlan[`week${week}`]={};weekPlan[`week${week}`][day]=recipes.find(x=>x.id===rid);saveAll();closePicker();renderWeek();}
