@@ -54,7 +54,7 @@ header{padding:14px 18px 0;border-bottom:1.5px solid var(--border);background:va
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
 .nav-btn.active{background:var(--card);color:var(--accent);border-color:var(--border);}
 .nav-btn .ni{font-size:19px;}
-main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touch-action:pan-y;}
+main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touch-action:pan-y;min-height:0;}
 .bottom-bar{width:100%;background:var(--bg);border-top:1.5px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;z-index:100;flex-shrink:0;}
 .bottom-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;transition:all .18s;}
 .bottom-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(240,165,0,.08);}
@@ -207,7 +207,7 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touc
     </div>
 
     <!-- KOCHBUCH -->
-    <div id="page-kochbuch" class="page page-flex-active" style="overflow:hidden;">
+    <div id="page-kochbuch" class="page page-flex-active" style="overflow:hidden;display:flex;flex-direction:column;">
       <div id="kb-kategorien">
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
           <div style="position:relative;flex:1;">
@@ -250,7 +250,7 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touc
           </button>
         </div>
       </div>
-      <div id="kb-rezepte" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+      <div id="kb-rezepte" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
           <h2 class="serif" id="kb-kategorie-titel" style="font-size:18px;color:var(--accent);flex:1;"></h2>
           <button class="btn btn-primary" id="kb-add-btn" style="font-size:12px;padding:8px 14px;" onclick="showAddFromKategorie()">+ Neu</button>
@@ -261,9 +261,9 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touc
         </div>
         <div id="kb-recipe-list" style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
         <div id="kb-recipe-detail" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
-        <div id="kb-add-form" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
+        <div id="kb-add-form" style="display:none;overflow-y:auto;flex:1;min-height:0;-webkit-overflow-scrolling:touch;"></div>
         <div id="kb-vesper-detail" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
-        <div id="kb-add-vesper-form" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
+        <div id="kb-add-vesper-form" style="display:none;overflow-y:auto;flex:1;min-height:0;-webkit-overflow-scrolling:touch;"></div>
       </div>
     </div>
   </main>
@@ -500,12 +500,13 @@ function showAddFromKategorie(){
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   renderKbAddForm(ctx,formId);
   const fd=document.getElementById(formId);
-  fd.style.display='block';
+  fd.style.display='flex';
+  fd.style.flexDirection='column';
   fd.style.overflowY='auto';
   fd.style.flex='1';
+  fd.style.minHeight='0';
   fd.style.webkitOverflowScrolling='touch';
-  fd.style.paddingBottom='20px';
-  // Scroll nach ganz oben
+  fd.style.paddingBottom='24px';
   setTimeout(()=>fd.scrollTop=0, 50);
 }
 function renderKbAddForm(ctx,formId){
@@ -671,11 +672,7 @@ async function handlePhotoKb(e,ctx,mode){
     try{
       const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:`Analysiere dieses Essensfoto. Antworte NUR mit validem JSON:
 {"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge","group":"Gruppenname oder leer"}],"steps":["Schritt"]}
-WICHTIG:
-- Übernimm alle Mengenangaben EXAKT wie geschrieben (140g bleibt 140g, niemals runden).
-- Wenn Zutaten in Gruppen aufgeteilt sind (z.B. Teig / Füllung / Sauce / Käsemasse), füge das Feld "group" mit dem Gruppennamen hinzu. Erste Zutat einer Gruppe bekommt den Gruppennamen, alle anderen in derselben Gruppe auch.
-- Wenn keine Gruppen vorhanden, lasse "group" leer ("").
-- Max 8 Schritte auf Deutsch.`}]}]})});
+WICHTIG:\n- Mengen EXAKT lesen: 1200g bleibt 1200g (nicht 120g!), auf Nullen am Ende achten.\n- Brüche exakt: 1/2, 3/4, 1/4 genau so übernehmen.\n- Bei Handschrift sehr sorgfältig lesen, lieber mehr Zeichen als zu wenig.\n- Einheiten korrekt: g, kg, ml, l, EL, TL, Stück, Prise genau zuordnen.\n- Gruppen: wenn Zutaten in Abschnitte aufgeteilt (Teig/Füllung/Käsemasse etc.) im \"group\" Feld angeben, sonst leer lassen.\n- Max 8 Schritte auf Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
       if(!mode||mode==='all'){
         if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
@@ -776,12 +773,13 @@ function editKbRecipe(id,ctx){
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   renderKbAddForm(ctx,formId);
   const fd=document.getElementById(formId);
-  fd.style.display='block';
+  fd.style.display='flex';
+  fd.style.flexDirection='column';
   fd.style.overflowY='auto';
   fd.style.flex='1';
+  fd.style.minHeight='0';
   fd.style.webkitOverflowScrolling='touch';
-  fd.style.paddingBottom='20px';
-  // Scroll nach ganz oben
+  fd.style.paddingBottom='24px';
   setTimeout(()=>fd.scrollTop=0, 50);
 }
 function deleteKbRecipe(id,ctx){
@@ -793,7 +791,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.12';
+  const VERSION='v0.11.13';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1161,12 +1159,13 @@ function editRecipe(id,ctx){
   const detEl=document.getElementById(detId);if(detEl)detEl.style.display='none';
   renderAddForm(ctx);
   const fd=document.getElementById(formId);
-  fd.style.display='block';
+  fd.style.display='flex';
+  fd.style.flexDirection='column';
   fd.style.overflowY='auto';
   fd.style.flex='1';
+  fd.style.minHeight='0';
   fd.style.webkitOverflowScrolling='touch';
-  fd.style.paddingBottom='20px';
-  // Scroll nach ganz oben
+  fd.style.paddingBottom='24px';
   setTimeout(()=>fd.scrollTop=0, 50);
 }
 function addIngToShop(id,ctx,portions){const pool=ctx==='vesper'?vesperRecipes:recipes;const r=pool.find(x=>x.id===id),factor=(portions||r.servings)/r.servings;r.ingredients.forEach(ing=>shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name:ing.name,amount:scaleAmount(ing.amount,factor),source:r.name+(factor!==1?` (${portions} Port.)`:''),checked:false}));saveAll();toast('✓ Zutaten zur Einkaufsliste hinzugefügt!');}
@@ -1234,7 +1233,7 @@ function ingRowHTML(i,ing,ctx,isKb,formId){
     else if(numMatch){qty=numMatch[1];unit=numMatch[2]||'';}
     else{qty='';unit=amt;}
   }
-  return`<div style="display:grid;grid-template-columns:55px 65px 1fr auto;gap:5px;margin-bottom:7px;">
+  return`<div style="display:grid;grid-template-columns:70px 80px 1fr auto;gap:6px;margin-bottom:7px;">
     <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit;" style="text-align:center;">
     <input type="text" value="${escHtml(unit)}" placeholder="Einheit" oninput="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value;" style="text-align:center;">
     <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value;">
