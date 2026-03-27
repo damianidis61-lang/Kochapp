@@ -564,7 +564,7 @@ function backFromKbForm(ctx){
   const srchWrap=document.querySelector('#kb-rezepte > div:nth-child(2)');if(srchWrap)srchWrap.style.display='';
   if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
 }
-function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:''});renderKbAddForm(ctx,formId);}
+function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderKbAddForm(ctx,formId);}
 function addStepRowKb(ctx,formId){syncFields();formData.steps.push('');renderKbAddForm(ctx,formId);}
 function removeIngKb(i,ctx,formId){syncFields();formData.ingredients.splice(i,1);renderKbAddForm(ctx,formId);}
 function removeStepKb(i,ctx,formId){syncFields();formData.steps.splice(i,1);renderKbAddForm(ctx,formId);}
@@ -578,6 +578,16 @@ function autoAssignKategorie(r,ctx){
 }
 function saveRecipeKb(ctx,formId){
   syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}
+  // Doppelte Rezepte erkennen (nur bei neuen Rezepten)
+  if(!formData.editMode){
+    const name=formData.name.trim().toLowerCase();
+    const pool=ctx==='vesper'?vesperRecipes:recipes;
+    const similar=pool.find(r=>r.name.toLowerCase()===name||
+      (r.name.toLowerCase().includes(name.slice(0,6))&&name.length>5));
+    if(similar&&!confirm(`⚠️ Ähnliches Rezept gefunden: "${similar.name}"
+
+Trotzdem speichern?`))return;
+  }
   const rid=formData.editMode?formData.id:((ctx==='vesper'?'v':'r')+Date.now());
   const r={id:rid,name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
   autoAssignKategorie(r,ctx);
@@ -601,9 +611,12 @@ async function handlePhotoKb(e,ctx){
     const b64=ev.target.result.split(',')[1];
     try{
       const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:`Analysiere dieses Essensfoto. Antworte NUR mit validem JSON:
-{"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge"}],"steps":["Schritt"]}
-WICHTIG: Übernimm alle Mengenangaben EXAKT wie geschrieben (z.B. 140g bleibt 140g, nicht runden oder schätzen).
-Wenn handgeschrieben: lies die Zahlen sorgfältig. Max 5 Schritte auf Deutsch.`}]}]})});
+{"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge","group":"Gruppenname oder leer"}],"steps":["Schritt"]}
+WICHTIG:
+- Übernimm alle Mengenangaben EXAKT wie geschrieben (140g bleibt 140g, niemals runden).
+- Wenn Zutaten in Gruppen aufgeteilt sind (z.B. Teig / Füllung / Sauce / Käsemasse), füge das Feld "group" mit dem Gruppennamen hinzu. Erste Zutat einer Gruppe bekommt den Gruppennamen, alle anderen in derselben Gruppe auch.
+- Wenn keine Gruppen vorhanden, lasse "group" leer ("").
+- Max 8 Schritte auf Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
       if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');if(p.ingredients?.length)formData.ingredients=p.ingredients;if(p.steps?.length)formData.steps=p.steps;
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
@@ -647,7 +660,7 @@ function showKbRecipeDetail(id,ctx,portions){
     </div>
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${r.id}','${ctx}',${base})">→ Einkaufsliste</button></div>
-      ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
+      ${(()=>{let lastGroup='';return r.ingredients.map((ing,i)=>{let html='';if(ing.group&&ing.group!==lastGroup){lastGroup=ing.group;html+=`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 0 4px;border-top:${i>0?'2px solid var(--border)':'none'}">${escHtml(ing.group)}</div>`;}html+=`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`;return html;}).join('');})()}
     </div>
     <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
     <div style="display:flex;gap:10px;">
@@ -703,7 +716,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v11.3';
+  const VERSION='v11.4';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1030,7 +1043,7 @@ function showRecipeDetail(id,ctx,portions){
     </div>
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${id}','${ctx}',${cur})">→ Einkaufsliste</button></div>
-      ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
+      ${(()=>{let lastGroup='';return r.ingredients.map((ing,i)=>{let html='';if(ing.group&&ing.group!==lastGroup){lastGroup=ing.group;html+=`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 0 4px;border-top:${i>0?'2px solid var(--border)':'none'}">${escHtml(ing.group)}</div>`;}html+=`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`;return html;}).join('');})()}
     </div>
     <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
     <div style="display:flex;gap:10px;">
@@ -1105,10 +1118,10 @@ function renderAddForm(ctx){
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipe('${ctx}')">Rezept speichern ✓</button>`;
 }
-function ingRowHTML(i,ing,ctx,isKb,formId){return`<div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;margin-bottom:7px;"><input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value"><input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value"><button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button></div>`;}
+function ingRowHTML(i,ing,ctx,isKb,formId){const grp=ing.group||'';return`<div style="margin-bottom:7px;"><input type="text" value="${escHtml(grp)}" placeholder="Gruppe (optional)" oninput="formData.ingredients[${i}].group=this.value" style="margin-bottom:4px;font-size:12px;padding:6px 10px;color:var(--muted);"><div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;"><input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value"><input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value"><button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button></div></div>`;}
 function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;cursor:grab;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);"><div style="color:var(--muted);font-size:18px;padding-top:10px;flex-shrink:0;touch-action:none;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
 function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;formData.tags=document.getElementById('f-tags').value;}
-function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:''});renderAddForm(ctx);}
+function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderAddForm(ctx);}
 function removeIng(i,ctx){syncFields();formData.ingredients.splice(i,1);renderAddForm(ctx);}
 function addStepRow(ctx){syncFields();formData.steps.push('');renderAddForm(ctx);}
 function removeStep(i,ctx){syncFields();formData.steps.splice(i,1);renderAddForm(ctx);}
