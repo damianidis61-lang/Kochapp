@@ -539,7 +539,10 @@ function renderKbAddForm(ctx,formId){
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <h3 style="font-size:14px;font-weight:600;">Zutaten</h3>
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRowKb('${ctx}','${formId}')">+ Zutat</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngGroupKb('${ctx}','${formId}')">+ Gruppe</button>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRowKb('${ctx}','${formId}')">+ Zutat</button>
+        </div>
       </div>
       <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx,true,formId)).join('')}</div>
     </div>
@@ -565,6 +568,7 @@ function backFromKbForm(ctx){
   if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
 }
 function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderKbAddForm(ctx,formId);}
+function addIngGroupKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:'',group:'',_isGroup:true});renderKbAddForm(ctx,formId);}
 function addStepRowKb(ctx,formId){syncFields();formData.steps.push('');renderKbAddForm(ctx,formId);}
 function removeIngKb(i,ctx,formId){syncFields();formData.ingredients.splice(i,1);renderKbAddForm(ctx,formId);}
 function removeStepKb(i,ctx,formId){syncFields();formData.steps.splice(i,1);renderKbAddForm(ctx,formId);}
@@ -618,7 +622,17 @@ WICHTIG:
 - Wenn keine Gruppen vorhanden, lasse "group" leer ("").
 - Max 8 Schritte auf Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
-      if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');if(p.ingredients?.length)formData.ingredients=p.ingredients;if(p.steps?.length)formData.steps=p.steps;
+      if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
+      if(p.ingredients?.length){
+        // Gruppen als _isGroup Elemente einfügen
+        const ings=[];let lastGrp='';
+        p.ingredients.forEach(ing=>{
+          if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
+          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
+        });
+        formData.ingredients=ings;
+      }
+      if(p.steps?.length)formData.steps=p.steps;
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderKbAddForm(ctx,formId);
   };reader.readAsDataURL(file);
@@ -660,7 +674,10 @@ function showKbRecipeDetail(id,ctx,portions){
     </div>
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${r.id}','${ctx}',${base})">→ Einkaufsliste</button></div>
-      ${(()=>{let lastGroup='';return r.ingredients.map((ing,i)=>{let html='';if(ing.group&&ing.group!==lastGroup){lastGroup=ing.group;html+=`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 0 4px;border-top:${i>0?'2px solid var(--border)':'none'}">${escHtml(ing.group)}</div>`;}html+=`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`;return html;}).join('');})()}
+      ${r.ingredients.map((ing,i)=>{
+        if(ing._isGroup)return`<div style="display:flex;align-items:center;gap:8px;padding:10px 0 4px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;">${escHtml(ing.name)}</span><div style="flex:1;height:1px;background:var(--border);"></div></div>`;
+        return`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`;
+      }).join('')}
     </div>
     <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
     <div style="display:flex;gap:10px;">
@@ -716,7 +733,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v11.4';
+  const VERSION='v11.5';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -903,9 +920,9 @@ function stepTouchMove(e){
 function stepTouchEnd(e,i,ctx,isKb,formId){
   if(!stepTouchClone)return;
   const t=e.changedTouches[0];
+  const scrollTop=document.getElementById(isKb==='true'?(ctx==='vesper'?'kb-add-vesper-form':'kb-add-form'):'add-recipe-form')?.scrollTop||0;
   stepTouchClone.remove();stepTouchClone=null;
   e.currentTarget.style.opacity='';
-  // Finde das Ziel-Element
   const target=document.elementFromPoint(t.clientX,t.clientY)?.closest('[data-step-idx]');
   if(target&&stepTouchDragIdx!==null){
     const targetIdx=parseInt(target.dataset.stepIdx);
@@ -917,6 +934,11 @@ function stepTouchEnd(e,i,ctx,isKb,formId){
       const moved=formData.steps.splice(stepTouchDragIdx,1)[0];
       formData.steps.splice(targetIdx,0,moved);
       if(isKb==='true')renderKbAddForm(ctx,formId);else renderAddForm(ctx);
+      // Scroll-Position beibehalten
+      setTimeout(()=>{
+        const fd=document.getElementById(isKb==='true'?(ctx==='vesper'?'kb-add-vesper-form':'kb-add-form'):'add-recipe-form');
+        if(fd)fd.scrollTop=scrollTop;
+      },30);
     }
   }
   stepTouchDragIdx=null;
@@ -924,17 +946,17 @@ function stepTouchEnd(e,i,ctx,isKb,formId){
 function stepDrop(e,targetIdx,ctx,isKb,formId){
   e.preventDefault();
   if(stepDragIdx===null||stepDragIdx===targetIdx)return;
-  // Sync fields first
+  const fd=document.getElementById(isKb==='true'?(ctx==='vesper'?'kb-add-vesper-form':'kb-add-form'):'add-recipe-form');
+  const scrollTop=fd?.scrollTop||0;
   const fn=document.getElementById('f-name');if(fn)formData.name=fn.value;
   const ft=document.getElementById('f-time');if(ft)formData.time=ft.value;
   const fs=document.getElementById('f-servings');if(fs)formData.servings=fs.value;
   const fg=document.getElementById('f-tags');if(fg)formData.tags=fg.value;
-  // Swap steps
   const moved=formData.steps.splice(stepDragIdx,1)[0];
   formData.steps.splice(targetIdx,0,moved);
   stepDragIdx=null;
-  if(isKb==='true')renderKbAddForm(ctx,formId);
-  else renderAddForm(ctx);
+  if(isKb==='true')renderKbAddForm(ctx,formId);else renderAddForm(ctx);
+  setTimeout(()=>{if(fd)fd.scrollTop=scrollTop;},30);
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function parseMinutes(t){if(!t)return null;const m=t.match(/(\d+)/);return m?parseInt(m[1]):null;}
@@ -1043,7 +1065,10 @@ function showRecipeDetail(id,ctx,portions){
     </div>
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${id}','${ctx}',${cur})">→ Einkaufsliste</button></div>
-      ${(()=>{let lastGroup='';return r.ingredients.map((ing,i)=>{let html='';if(ing.group&&ing.group!==lastGroup){lastGroup=ing.group;html+=`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 0 4px;border-top:${i>0?'2px solid var(--border)':'none'}">${escHtml(ing.group)}</div>`;}html+=`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`;return html;}).join('');})()}
+      ${r.ingredients.map((ing,i)=>{
+        if(ing._isGroup)return`<div style="display:flex;align-items:center;gap:8px;padding:10px 0 4px;"><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;">${escHtml(ing.name)}</span><div style="flex:1;height:1px;background:var(--border);"></div></div>`;
+        return`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`;
+      }).join('')}
     </div>
     <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
     <div style="display:flex;gap:10px;">
@@ -1118,7 +1143,22 @@ function renderAddForm(ctx){
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipe('${ctx}')">Rezept speichern ✓</button>`;
 }
-function ingRowHTML(i,ing,ctx,isKb,formId){const grp=ing.group||'';return`<div style="margin-bottom:7px;"><input type="text" value="${escHtml(grp)}" placeholder="Gruppe (optional)" oninput="formData.ingredients[${i}].group=this.value" style="margin-bottom:4px;font-size:12px;padding:6px 10px;color:var(--muted);"><div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;"><input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value"><input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value"><button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button></div></div>`;}
+function ingRowHTML(i,ing,ctx,isKb,formId){
+  const isGroup=ing._isGroup;
+  if(isGroup){
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;padding:4px 0;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <input type="text" value="${escHtml(ing.name)}" placeholder="Gruppenname (z.B. Teig)" oninput="formData.ingredients[${i}].name=this.value" style="width:160px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:4px 8px;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 2px;line-height:1;">×</button>
+    </div>`;
+  }
+  return`<div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;margin-bottom:7px;">
+    <input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value">
+    <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value">
+    <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button>
+  </div>`;
+}
 function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;cursor:grab;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);"><div style="color:var(--muted);font-size:18px;padding-top:10px;flex-shrink:0;touch-action:none;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
 function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;formData.tags=document.getElementById('f-tags').value;}
 function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderAddForm(ctx);}
@@ -1132,7 +1172,17 @@ async function handlePhoto(e,ctx){
   reader.onload=async(ev)=>{const b64=ev.target.result.split(',')[1];
     try{const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:`Analysiere dieses Essensfoto. Antworte NUR mit validem JSON:\n{"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge"}],"steps":["Schritt"]}\nMax 5 Schritte auf Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
-      if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');if(p.ingredients?.length)formData.ingredients=p.ingredients;if(p.steps?.length)formData.steps=p.steps;
+      if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
+      if(p.ingredients?.length){
+        // Gruppen als _isGroup Elemente einfügen
+        const ings=[];let lastGrp='';
+        p.ingredients.forEach(ing=>{
+          if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
+          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
+        });
+        formData.ingredients=ings;
+      }
+      if(p.steps?.length)formData.steps=p.steps;
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderAddForm(ctx);if(formData.aiError){const el=document.getElementById('ai-error-'+ctx);if(el){el.style.display='block';el.textContent=formData.aiError;}}
   };reader.readAsDataURL(file);
