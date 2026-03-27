@@ -481,11 +481,19 @@ function showAddFromKategorie(){
   const srchWrap=document.querySelector('#kb-rezepte > div:first-child');if(srchWrap)srchWrap.style.display='none';
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   renderKbAddForm(ctx,formId);
-  document.getElementById(formId).style.display='flex';document.getElementById(formId).style.flexDirection='column';
+  const fd=document.getElementById(formId);
+  fd.style.display='block';
+  fd.style.overflowY='auto';
+  fd.style.flex='1';
+  fd.style.webkitOverflowScrolling='touch';
+  fd.style.paddingBottom='20px';
+  // Scroll nach ganz oben
+  setTimeout(()=>fd.scrollTop=0, 50);
 }
 function renderKbAddForm(ctx,formId){
   const isV=ctx==='vesper';
-  document.getElementById(formId).innerHTML=`
+  const _fd=document.getElementById(formId);
+  _fd.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <h2 class="serif" style="font-size:22px;">${formData.editMode?(isV?'Vesper bearbeiten':'Rezept bearbeiten'):(isV?'Neues Vesper-Rezept':'Neues Rezept')}</h2>
       <button class="btn btn-ghost" onclick="backFromKbForm('${ctx}')">Abbrechen</button>
@@ -530,6 +538,7 @@ function renderKbAddForm(ctx,formId){
       <div id="step-rows">${formData.steps.map((s,i)=>stepRowHTML(i,s,ctx,true,formId)).join('')}</div>
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipeKb('${ctx}','${formId}')">Rezept speichern ✓</button>`;
+  setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=0;},30);
 }
 function backFromKbForm(ctx){
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
@@ -662,7 +671,14 @@ function editKbRecipe(id,ctx){
   document.getElementById(detId).style.display='none';
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   renderKbAddForm(ctx,formId);
-  document.getElementById(formId).style.display='flex';document.getElementById(formId).style.flexDirection='column';
+  const fd=document.getElementById(formId);
+  fd.style.display='block';
+  fd.style.overflowY='auto';
+  fd.style.flex='1';
+  fd.style.webkitOverflowScrolling='touch';
+  fd.style.paddingBottom='20px';
+  // Scroll nach ganz oben
+  setTimeout(()=>fd.scrollTop=0, 50);
 }
 function deleteKbRecipe(id,ctx){
   if(!confirm('Rezept wirklich löschen?'))return;
@@ -673,7 +689,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v11.0';
+  const VERSION='v11.1';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -969,7 +985,14 @@ function editRecipe(id,ctx){
   const listEl=document.getElementById(listId);if(listEl)listEl.style.display='none';
   const detEl=document.getElementById(detId);if(detEl)detEl.style.display='none';
   renderAddForm(ctx);
-  document.getElementById(formId).style.display='flex';document.getElementById(formId).style.flexDirection='column';
+  const fd=document.getElementById(formId);
+  fd.style.display='block';
+  fd.style.overflowY='auto';
+  fd.style.flex='1';
+  fd.style.webkitOverflowScrolling='touch';
+  fd.style.paddingBottom='20px';
+  // Scroll nach ganz oben
+  setTimeout(()=>fd.scrollTop=0, 50);
 }
 function addIngToShop(id,ctx,portions){const pool=ctx==='vesper'?vesperRecipes:recipes;const r=pool.find(x=>x.id===id),factor=(portions||r.servings)/r.servings;r.ingredients.forEach(ing=>shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name:ing.name,amount:scaleAmount(ing.amount,factor),source:r.name+(factor!==1?` (${portions} Port.)`:''),checked:false}));saveAll();toast('✓ Zutaten zur Einkaufsliste hinzugefügt!');}
 function deleteRecipeCtx(id,ctx){if(!confirm('Rezept wirklich löschen?'))return;if(ctx==='vesper'){vesperRecipes=vesperRecipes.filter(x=>x.id!==id);Object.keys(vesperPlan).forEach(k=>{if(vesperPlan[k]?.id===id)delete vesperPlan[k];});}else{recipes=recipes.filter(x=>x.id!==id);Object.keys(weekPlan).forEach(k=>{if(weekPlan[k]?.id===id)delete weekPlan[k];});}saveAll();backToList(ctx);}
@@ -1120,10 +1143,13 @@ function onTouchStart(e, type, day, week, kat){
   const touch=e.touches[0];
   touchDragEl=e.currentTarget;
   dragSource={type,day,week,kat};
-  // Tap-Detection: Startposition merken
   touchDragEl._tapStartX=touch.clientX;
   touchDragEl._tapStartY=touch.clientY;
   touchDragEl._tapStartTime=Date.now();
+  touchDragEl._tapType=type;
+  touchDragEl._tapDay=day;
+  touchDragEl._tapWeek=week;
+  touchDragEl._tapKat=kat;
   const rect=touchDragEl.getBoundingClientRect();
   touchOffX=touch.clientX-rect.left;
   touchOffY=touch.clientY-rect.top;
@@ -1155,28 +1181,28 @@ function onTouchMove(e){
 }
 
 function onTouchEnd(e){
-  if(!touchClone)return;
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   const touch=e.changedTouches[0];
   const el=touchDragEl;
   if(el)el.style.opacity='';
-  touchClone.remove();touchClone=null;
+  if(touchClone){touchClone.remove();touchClone=null;}
   document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-  // Prüfen ob es ein kurzer Tap war (kein Drag)
-  const dx=Math.abs(touch.clientX-(el?._tapStartX||touch.clientX));
-  const dy=Math.abs(touch.clientY-(el?._tapStartY||touch.clientY));
-  const dt=Date.now()-(el?._tapStartTime||Date.now());
-  if(dx<10&&dy<10&&dt<300&&dragSource){
-    // Kurzer Tap → Slot-Detail öffnen
+  // Tap-Detection: wenig Bewegung + kurze Zeit = Tap
+  const dx=Math.abs(touch.clientX-(el?._tapStartX||0));
+  const dy=Math.abs(touch.clientY-(el?._tapStartY||0));
+  const dt=Date.now()-(el?._tapStartTime||0);
+  const isTap=dx<12&&dy<12&&dt<400;
+  if(isTap&&el){
+    // Kurzer Tap → Slot-Detail öffnen mit gespeicherten Werten
+    const type=el._tapType;
+    const day=el._tapDay;
+    const week=el._tapWeek||currentWocheTab;
+    const kat=el._tapKat;
     dragSource=null;touchDragEl=null;
-    const s=e.currentTarget||el;
-    const type=s?.dataset?.dtype||dragSource?.type;
-    const day=s?.dataset?.day||dragSource?.day;
-    const week=parseInt(s?.dataset?.week||currentWocheTab);
-    const kat=s?.dataset?.kat||null;
     if(day)openSlotDetail(day,week,type,kat);
     return;
   }
+  // Drag → Tauschen
   const target=document.elementFromPoint(touch.clientX,touch.clientY)?.closest('.week-slot[data-drag]');
   if(target&&dragSource){
     const type=target.dataset.dtype;
