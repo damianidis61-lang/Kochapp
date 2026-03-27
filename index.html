@@ -55,7 +55,7 @@ nav{display:flex;gap:3px;}
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
 .nav-btn.active{background:var(--card);color:var(--accent);border-color:var(--border);}
 .nav-btn .ni{font-size:19px;}
-main{flex:1;padding:10px 12px 10px;overflow:hidden;display:flex;flex-direction:column;}
+main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;}
 .bottom-bar{width:100%;background:var(--bg);border-top:1.5px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;z-index:100;flex-shrink:0;}
 .bottom-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;transition:all .18s;}
 .bottom-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(240,165,0,.08);}
@@ -126,7 +126,7 @@ main{flex:1;padding:10px 12px 10px;overflow:hidden;display:flex;flex-direction:c
   <main>
     <!-- STARTSEITE -->
     <div id="page-start" class="page page-flex-active active">
-      <div style="display:flex;flex-direction:column;gap:12px;flex:1;padding-top:16px;">
+      <div style="display:flex;flex-direction:column;gap:12px;flex:1;">
         <button onclick="showMain('wochenplan')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:0 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;flex:1;">
           <div style="font-size:52px;">📅</div>
           <div>
@@ -166,27 +166,27 @@ main{flex:1;padding:10px 12px 10px;overflow:hidden;display:flex;flex-direction:c
         <div id="wp-tab-einkauf" style="display:none;"></div>
       </div>
       <div id="wp-mittag" style="flex-direction:column;flex:1;overflow:hidden;display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;background:var(--surface);border-radius:12px;padding:8px 12px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;background:var(--surface);border-radius:12px;padding:8px 12px;flex-shrink:0;">
           <button onclick="changeCalWeek(-1)" id="cal-prev" style="background:none;border:none;font-size:22px;color:var(--accent);cursor:pointer;padding:0 8px;">‹</button>
           <span id="cal-month" style="font-size:13px;font-weight:600;color:var(--text);"></span>
           <button onclick="changeCalWeek(1)" id="cal-next" style="background:none;border:none;font-size:22px;color:var(--accent);cursor:pointer;padding:0 8px;">›</button>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-shrink:0;">
           <button class="sub-btn active" id="woche-tab-1" onclick="showWocheTab(1)">Woche 1</button>
           <button class="sub-btn" id="woche-tab-2" onclick="showWocheTab(2)">Woche 2</button>
         </div>
-        <div style="display:flex;gap:8px;align-items:stretch;flex:1;padding-bottom:10px;">
-          <div id="week-grid" style="flex:1;display:flex;flex-direction:column;gap:4px;"></div>
+        <div style="display:flex;gap:8px;align-items:stretch;flex:1;padding-bottom:12px;">
+          <div id="week-grid" style="flex:1;display:flex;flex-direction:column;gap:6px;"></div>
           <button class="btn btn-primary" id="planen-btn" onclick="openAutoPlan()" style="writing-mode:vertical-rl;padding:14px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;">Planen</button>
         </div>
       </div>
       <div id="wp-vesper" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-shrink:0;">
           <div class="sub-btn active" style="pointer-events:none;">🧀 Salzig</div>
           <div class="sub-btn active" style="pointer-events:none;">🍰 Süß</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:stretch;flex:1;padding-bottom:10px;">
-          <div id="vesper-grid" style="flex:1;display:flex;flex-direction:column;gap:4px;"></div>
+        <div style="display:flex;gap:8px;align-items:stretch;flex:1;padding-bottom:12px;">
+          <div id="vesper-grid" style="flex:1;display:flex;flex-direction:column;gap:6px;"></div>
           <button class="btn btn-primary" id="vesper-planen-btn" onclick="openVesperPlan()" style="writing-mode:vertical-rl;padding:14px 10px;font-size:13px;font-weight:700;border-radius:12px;white-space:nowrap;flex-shrink:0;">Planen</button>
         </div>
       </div>
@@ -214,7 +214,7 @@ main{flex:1;padding:10px 12px 10px;overflow:hidden;display:flex;flex-direction:c
           <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;white-space:nowrap;" onclick="showAddFromKategorienMain()">+ Neu</button>
         </div>
         <div id="kb-global-results" style="display:none;"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;">
           <button onclick="showKategorie('fleisch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
             <img src="icons/Steak.png" style="width:60px;height:60px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="font-size:52px;display:none;">🥩</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
           </button>
@@ -247,7 +247,7 @@ main{flex:1;padding:10px 12px 10px;overflow:hidden;display:flex;flex-direction:c
           </button>
         </div>
       </div>
-      <div id="kb-rezepte" style="display:none;">
+      <div id="kb-rezepte" style="display:none;flex:1;display:flex;flex-direction:column;overflow:hidden;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
           <h2 class="serif" id="kb-kategorie-titel" style="font-size:18px;color:var(--accent);flex:1;"></h2>
           <button class="btn btn-primary" id="kb-add-btn" style="font-size:12px;padding:8px 14px;" onclick="showAddFromKategorie()">+ Neu</button>
@@ -256,10 +256,10 @@ main{flex:1;padding:10px 12px 10px;overflow:hidden;display:flex;flex-direction:c
           <input type="text" id="kb-search" placeholder="🔍 Suchen… z.B. Nudeln Hühnchen" oninput="filterKbRecipes(this.value)" style="margin-bottom:0;padding-right:42px;">
           <button onclick="showSearchInfo()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#1a1108;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">ℹ</button>
         </div>
-        <div id="kb-recipe-list"></div>
-        <div id="kb-recipe-detail" style="display:none;"></div>
+        <div id="kb-recipe-list" style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
+        <div id="kb-recipe-detail" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
         <div id="kb-add-form" style="display:none;"></div>
-        <div id="kb-vesper-detail" style="display:none;"></div>
+        <div id="kb-vesper-detail" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
         <div id="kb-add-vesper-form" style="display:none;"></div>
       </div>
     </div>
@@ -673,7 +673,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v10.3';
+  const VERSION='v10.4';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1455,8 +1455,8 @@ function openSlotDetail(day,week,type,kat){
   const dd=TYPES[r.type]||TYPES.vegetarian;
   const modal=document.getElementById('slot-detail-modal');
   modal.style.display='block';
-  modal.innerHTML=`<div class="modal-overlay" onclick="closeSlotDetail()" style="align-items:center;">
-    <div class="modal-box" onclick="event.stopPropagation()" style="border-radius:22px;max-height:80vh;overflow-y:auto;">
+  modal.innerHTML=`<div class="modal-overlay" onclick="closeSlotDetail()" style="align-items:flex-end;">
+    <div class="modal-box" onclick="event.stopPropagation()" style="border-radius:22px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
         <div style="width:56px;height:56px;border-radius:14px;background:${dd.color}22;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">${dd.icon}</div>
         <div><h2 class="serif" style="font-size:22px;margin-bottom:2px;">${escHtml(r.name)}</h2>
