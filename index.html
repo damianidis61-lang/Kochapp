@@ -247,7 +247,7 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;}
           </button>
         </div>
       </div>
-      <div id="kb-rezepte" style="display:none;flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div id="kb-rezepte" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
           <h2 class="serif" id="kb-kategorie-titel" style="font-size:18px;color:var(--accent);flex:1;"></h2>
           <button class="btn btn-primary" id="kb-add-btn" style="font-size:12px;padding:8px 14px;" onclick="showAddFromKategorie()">+ Neu</button>
@@ -409,7 +409,7 @@ function showKategorie(kat){
   currentKbKat=kat;
   const cat=KB_CATEGORIES[kat];
   document.getElementById('kb-kategorien').classList.remove('kb-visible');
-  document.getElementById('kb-rezepte').style.display='block';
+  document.getElementById('kb-rezepte').style.display='flex';
   document.getElementById('kb-kategorie-titel').textContent=cat.icon+' '+cat.label;
   document.getElementById('kb-search').value='';
   // Sicherstellen dass Liste und Toolbar sichtbar, Details versteckt
@@ -596,7 +596,7 @@ function showKbRecipeDetail(id,ctx,portions){
   const base=r.servings||2;
   const cur=portions!==undefined?portions:base;
   const factor=cur/base;
-  det.style.display='block';
+  det.style.display='flex';det.style.flexDirection='column';
   const dd=TYPES[r.type]||TYPES.vegetarian;
   det.innerHTML=`
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
@@ -657,7 +657,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v10.5';
+  const VERSION='v10.6';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -908,7 +908,7 @@ function showRecipeDetail(id,ctx,portions){
   document.getElementById(listId).style.display='none';
   document.getElementById(formId).style.display='none';
   document.getElementById(tbId).style.display='none';
-  const det=document.getElementById(detId);det.style.display='block';
+  const det=document.getElementById(detId);det.style.display='flex';det.style.flexDirection='column';
   const dd=TYPES[r.type]||TYPES.vegetarian;
   det.innerHTML=`<button class="btn btn-ghost" style="margin-bottom:18px;" onclick="backToList('${ctx}')">← Zurück</button>
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
