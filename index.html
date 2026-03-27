@@ -417,6 +417,7 @@ function showKategorie(kat){
   const addBtn=document.getElementById('kb-add-btn');if(addBtn)addBtn.style.display='';
   const srch=document.getElementById('kb-search');if(srch)srch.style.display='';
   const titel=document.getElementById('kb-kategorie-titel');if(titel)titel.style.display='';
+  const srchWrap=document.querySelector('#kb-rezepte > div:nth-child(2)');if(srchWrap)srchWrap.style.display='';
   const rdet=document.getElementById('kb-recipe-detail');if(rdet){rdet.style.display='none';rdet.innerHTML='';}
   const vdet=document.getElementById('kb-vesper-detail');if(vdet){vdet.style.display='none';vdet.innerHTML='';}
   const rform=document.getElementById('kb-add-form');if(rform){rform.style.display='none';}
@@ -475,6 +476,7 @@ function showAddFromKategorie(){
   document.getElementById('kb-add-btn').style.display='none';
   document.getElementById('kb-search').style.display='none';
   document.getElementById('kb-kategorie-titel').style.display='none';
+  const srchWrap=document.querySelector('#kb-rezepte > div:first-child');if(srchWrap)srchWrap.style.display='none';
   const formId=ctx==='vesper'?'kb-add-vesper-form':'kb-add-form';
   renderKbAddForm(ctx,formId);
   document.getElementById(formId).style.display='flex';document.getElementById(formId).style.flexDirection='column';
@@ -513,7 +515,7 @@ function renderKbAddForm(ctx,formId){
     <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:16px;">
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h3 style="font-size:14px;font-weight:600;">🧄 Zutaten</h3>
+        <h3 style="font-size:14px;font-weight:600;">Zutaten</h3>
         <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRowKb('${ctx}','${formId}')">+ Zutat</button>
       </div>
       <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx,true,formId)).join('')}</div>
@@ -535,6 +537,7 @@ function backFromKbForm(ctx){
   const addBtn=document.getElementById('kb-add-btn');if(addBtn)addBtn.style.display='';
   const srch=document.getElementById('kb-search');if(srch)srch.style.display='';
   const titel=document.getElementById('kb-kategorie-titel');if(titel)titel.style.display='';
+  const srchWrap=document.querySelector('#kb-rezepte > div:nth-child(2)');if(srchWrap)srchWrap.style.display='';
   if(currentKbKat)renderKbRecipes(KB_CATEGORIES[currentKbKat]);
 }
 function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:''});renderKbAddForm(ctx,formId);}
@@ -593,6 +596,8 @@ function showKbRecipeDetail(id,ctx,portions){
     document.getElementById('kb-recipe-list').style.display='none';
     document.getElementById('kb-add-btn').style.display='none';
     document.getElementById('kb-search').style.display='none';
+    document.getElementById('kb-kategorie-titel').style.display='none';
+    const srchRow=document.querySelector('#kb-rezepte > div:nth-child(2)');if(srchRow)srchRow.style.display='none';
   }
   const pool=ctx==='vesper'?vesperRecipes:recipes;
   const r=pool.find(x=>x.id===id);if(!r)return;
@@ -602,9 +607,8 @@ function showKbRecipeDetail(id,ctx,portions){
   det.style.display='flex';det.style.flexDirection='column';
   const dd=TYPES[r.type]||TYPES.vegetarian;
   det.innerHTML=`
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;position:relative;">
-      <div style="width:72px;height:72px;border-radius:16px;background:${dd.color}22;display:flex;align-items:center;justify-content:center;font-size:42px;flex-shrink:0;">${ctx==='vesper'?'🍎':dd.icon}</div>
-      <div style="flex:1;"><h2 class="serif" style="font-size:24px;margin-bottom:4px;">${escHtml(r.name)}</h2>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative;">
+      <div style="flex:1;"><h2 class="serif" style="font-size:22px;margin-bottom:2px;">${escHtml(r.name)}</h2>
       <div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div>
       <button onclick="toggleRecipeInfo('recipe-info-${r.id}')" style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#1a1108;border:none;font-size:13px;font-weight:700;flex-shrink:0;cursor:pointer;">ℹ</button>
     </div>
@@ -617,10 +621,10 @@ function showKbRecipeDetail(id,ctx,portions){
       <div class="portion-scaler"><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}',${Math.max(1,cur-1)})">−</button><div class="portion-num">${cur}</div><button class="portion-btn" onclick="showKbRecipeDetail('${r.id}','${ctx}',${cur+1})">+</button></div>
     </div>
     <div class="card" style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">🧄 Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${r.id}','${ctx}',${base})">→ Einkaufsliste</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${r.id}','${ctx}',${base})">→ Einkaufsliste</button></div>
       ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
     </div>
-    <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">👩‍🍳 Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
+    <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
     <div style="display:flex;gap:10px;">
       <button class="btn btn-ghost" style="flex:1;" onclick="editKbRecipe('${r.id}','${ctx}')">✏️ Bearbeiten</button>
       <button class="btn btn-danger" style="flex:1;" onclick="deleteKbRecipe('${r.id}','${ctx}')">🗑️ Löschen</button>
@@ -641,6 +645,7 @@ function backToKbList(ctx){
   const addBtn=document.getElementById('kb-add-btn');if(addBtn)addBtn.style.display='';
   const srch=document.getElementById('kb-search');if(srch)srch.style.display='';
   const titel=document.getElementById('kb-kategorie-titel');if(titel)titel.style.display='';
+  const srchWrap=document.querySelector('#kb-rezepte > div:nth-child(2)');if(srchWrap)srchWrap.style.display='';
   // always re-render to make sure list is populated
   if(currentKbKat){
     renderKbRecipes(KB_CATEGORIES[currentKbKat]);
@@ -666,7 +671,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v10.7';
+  const VERSION='v10.9';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -936,10 +941,10 @@ function showRecipeDetail(id,ctx,portions){
       <div class="portion-scaler"><button class="portion-btn" onclick="showRecipeDetail('${id}','${ctx}',${Math.max(1,cur-1)})">−</button><div class="portion-num">${cur}</div><button class="portion-btn" onclick="showRecipeDetail('${id}','${ctx}',${cur+1})">+</button></div>
     </div>
     <div class="card" style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">🧄 Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${id}','${ctx}',${cur})">→ Einkaufsliste</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><h3 style="font-size:15px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:7px 13px;" onclick="addIngToShop('${id}','${ctx}',${cur})">→ Einkaufsliste</button></div>
       ${r.ingredients.map((ing,i)=>`<div style="display:flex;padding:9px 0;font-size:14px;${i<r.ingredients.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--accent);font-weight:500;min-width:75px;">${escHtml(scaleAmount(ing.amount,factor))}</span><span style="flex:1;padding-left:8px;">${escHtml(ing.name)}</span></div>`).join('')}
     </div>
-    <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">👩‍🍳 Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
+    <div class="card" style="margin-bottom:16px;"><h3 style="font-size:15px;font-weight:600;margin-bottom:14px;">Zubereitung</h3>${r.steps.map((s,i)=>`<div style="display:flex;gap:13px;margin-bottom:14px;align-items:flex-start;"><div class="step-num">${i+1}</div><p style="font-size:14px;line-height:1.6;padding-top:4px;">${escHtml(s)}</p></div>`).join('')}</div>
     <div style="display:flex;gap:10px;">
       <button class="btn btn-ghost" style="flex:1;" onclick="editRecipe('${id}','${ctx}')">✏️ Bearbeiten</button>
       <button class="btn btn-danger" style="flex:1;" onclick="deleteRecipeCtx('${id}','${ctx}')">🗑️ Löschen</button>
@@ -996,7 +1001,7 @@ function renderAddForm(ctx){
     <label class="label">Tags</label>
     <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:16px;">
     <div class="card" style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:14px;font-weight:600;">🧄 Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRow('${ctx}')">+ Zutat</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:14px;font-weight:600;">Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRow('${ctx}')">+ Zutat</button></div>
       <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx,true,formId)).join('')}</div>
     </div>
     <div class="card" style="margin-bottom:20px;">
