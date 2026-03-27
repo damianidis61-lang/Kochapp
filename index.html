@@ -16,7 +16,7 @@
 <style>
 :root{--bg:#f5f0e8;--surface:#ede8de;--card:#fffdf8;--card2:#fdf8f0;--accent:#f0a500;--accent2:#e06c2a;--green:#5daa6f;--red:#d9534f;--text:#2a1f0a;--muted:#8a7a5a;--border:#d8cdb8;--shadow:0 2px 12px rgba(0,0,0,.08);--veg:#4caf50;--meat:#e07040;--fish:#2196f3;--vesper:#9c27b0;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:pan-y;}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;min-height:-webkit-fill-available;}
 .serif{font-family:'Cormorant Garamond',serif;}
 input,textarea,select{background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'Outfit',sans-serif;font-size:15px;width:100%;outline:none;transition:border .2s;-webkit-appearance:none;}
@@ -48,7 +48,7 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 .week-slot:active{opacity:.8;}
 .spinner{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg);}}
-#app{max-width:520px;margin:0 auto;height:100vh;height:-webkit-fill-available;display:flex;flex-direction:column;overflow:hidden;}
+#app{max-width:520px;margin:0 auto;height:100vh;height:-webkit-fill-available;display:flex;flex-direction:column;overflow:hidden;touch-action:pan-y;}
 header{padding:14px 18px 0;border-bottom:1.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;}
 
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
@@ -629,12 +629,7 @@ function removeStepKb(i,ctx,formId){
   setTimeout(()=>{const f=document.getElementById(formId);if(f)f.scrollTop=scroll;},30);
 }
 function autoAssignKategorie(r,ctx){
-  if(ctx==='vesper')return;
-  const text=(r.name+' '+(r.tags||[]).join(' ')+' '+(r.ingredients||[]).map(i=>i.name).join(' ')).toLowerCase();
-  if(/back|kuchen|torte|brot|muffin|cookie|keks/.test(text)&&!r.tags.includes('Backen'))r.tags.push('Backen');
-  if(/grill|bbq|barbecue/.test(text)&&!r.tags.includes('Grillen'))r.tags.push('Grillen');
-  if(/ofen|auflauf|überbacken/.test(text)&&!r.tags.includes('Ofen'))r.tags.push('Ofen');
-  if(/suppe|eintopf|brühe/.test(text)&&!r.tags.includes('Suppe'))r.tags.push('Suppe');
+  // Keine automatischen Tag-Änderungen — Rezepte bleiben wie eingegeben
 }
 function saveRecipeKb(ctx,formId){
   syncFields();if(!formData.name.trim()){toast('⚠️ Bitte Rezeptname eingeben');return;}
@@ -649,7 +644,7 @@ function saveRecipeKb(ctx,formId){
 Trotzdem speichern?`))return;
   }
   const rid=formData.editMode?formData.id:((ctx==='vesper'?'v':'r')+Date.now());
-  const r={id:rid,name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
+  const r={id:rid,name:formData.name.trim(),type:formData.type||'vegetarian',time:formData.time||'?',servings:parseInt(formData.servings)||2,tags:formData.tags.split(',').map(t=>t.trim()).filter(Boolean),ingredients:formData.ingredients.filter(i=>i.name.trim()).map(i=>{const {_ai,...rest}=i;return rest;}),steps:formData.steps.filter(s=>s.trim()),image:null,vesperKat:ctx==='vesper'?(formData.vesperKat||'salzig'):undefined};
   autoAssignKategorie(r,ctx);
   if(formData.editMode){
     if(ctx==='vesper'){const idx=vesperRecipes.findIndex(x=>x.id===r.id);if(idx>=0)vesperRecipes[idx]=r;}
@@ -685,11 +680,15 @@ WICHTIG:
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
-          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
+          ings.push({name:ing.name,amount:ing.amount,group:ing.group||'',_ai:true});
         });
         formData.ingredients=ings;
+        formData._aiIngredients=true;
       }
-      if((!mode||mode==='all'||mode==='steps')&&p.steps?.length)formData.steps=p.steps;
+      if((!mode||mode==='all'||mode==='steps')&&p.steps?.length){
+        formData.steps=p.steps;
+        formData._aiSteps=true;
+      }
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderKbAddForm(ctx,formId);
   };reader.readAsDataURL(file);
@@ -790,7 +789,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.9';
+  const VERSION='v0.11.11';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1220,15 +1219,30 @@ function ingRowHTML(i,ing,ctx,isKb,formId){
   const parts=(ing.amount||'').match(/^([\d.,\/]+)?\s*(.*)$/)||['','',''];
   const qty=ing.qty!==undefined?ing.qty:parts[1]||'';
   const unit=ing.unit!==undefined?ing.unit:parts[2]||'';
+  const aiStyle=ing._ai?'color:var(--red);font-weight:700;':'';
   return`<div style="display:grid;grid-template-columns:55px 65px 1fr auto;gap:5px;margin-bottom:7px;">
-    <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit" style="text-align:center;">
-    <input type="text" value="${escHtml(unit)}" placeholder="Einheit" oninput="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value" style="text-align:center;">
-    <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value">
+    <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit;formData.ingredients[${i}]._ai=false;" style="text-align:center;${aiStyle}">
+    <input type="text" value="${escHtml(unit)}" placeholder="Einheit" oninput="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value;formData.ingredients[${i}]._ai=false;" style="text-align:center;${aiStyle}">
+    <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value;formData.ingredients[${i}]._ai=false;" style="${aiStyle}">
     <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button>
   </div>`;
 }
-function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);touch-action:pan-y;"><div ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="color:var(--accent);font-size:22px;padding-top:8px;flex-shrink:0;touch-action:none;cursor:grab;padding-left:2px;padding-right:4px;user-select:none;">↕</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;touch-action:pan-y;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
-function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;const tg=document.getElementById('f-tags');if(tg)formData.tags=tg.value;}
+function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);touch-action:pan-y;"><div ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="color:var(--accent);font-size:22px;padding-top:8px;flex-shrink:0;touch-action:none;cursor:grab;padding-left:2px;padding-right:4px;user-select:none;">↕</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;touch-action:pan-y;${formData._aiSteps?'color:var(--red);font-weight:700;':''}" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value;formData._aiSteps=false;">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
+function syncFields(){
+  const n=document.getElementById('f-name');if(!n)return;
+  formData.name=n.value;
+  formData.time=document.getElementById('f-time')?.value||formData.time;
+  formData.servings=document.getElementById('f-servings')?.value||formData.servings;
+  const tg=document.getElementById('f-tags');if(tg)formData.tags=tg.value;
+  // Steps aus Textareas direkt lesen
+  document.querySelectorAll('#step-rows textarea').forEach((ta,i)=>{
+    if(formData.steps[i]!==undefined)formData.steps[i]=ta.value;
+  });
+  // Zutaten aus Inputs direkt lesen
+  document.querySelectorAll('#ing-rows input[placeholder="Zutat"]').forEach((inp,i)=>{
+    if(formData.ingredients[i]!==undefined)formData.ingredients[i].name=inp.value;
+  });
+}
 function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:'',group:''});renderAddForm(ctx);}
 function removeIng(i,ctx){syncFields();formData.ingredients.splice(i,1);renderAddForm(ctx);}
 function addStepRow(ctx){syncFields();formData.steps.push('');renderAddForm(ctx);}
@@ -1247,11 +1261,15 @@ async function handlePhoto(e,ctx){
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
-          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
+          ings.push({name:ing.name,amount:ing.amount,group:ing.group||'',_ai:true});
         });
         formData.ingredients=ings;
+        formData._aiIngredients=true;
       }
-      if((!mode||mode==='all'||mode==='steps')&&p.steps?.length)formData.steps=p.steps;
+      if((!mode||mode==='all'||mode==='steps')&&p.steps?.length){
+        formData.steps=p.steps;
+        formData._aiSteps=true;
+      }
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderAddForm(ctx);if(formData.aiError){const el=document.getElementById('ai-error-'+ctx);if(el){el.style.display='block';el.textContent=formData.aiError;}}
   };reader.readAsDataURL(file);
