@@ -31,7 +31,7 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 .card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
 .tag{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:12px;color:var(--muted);}
 .label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;}
-.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}#page-start.active,#page-wochenplan.active,#page-kochbuch.active{flex:1;overflow:hidden;}#kb-kategorien.page-flex{display:flex;flex-direction:column;}
+.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}.page-flex-active{display:none;}.page-flex-active.active{display:flex;flex-direction:column;flex:1;overflow:hidden;}#kb-kategorien{display:none;}#kb-kategorien.kb-visible{display:flex;flex-direction:column;flex:1;overflow:hidden;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;animation:fadeUp .2s;}
 .modal-box{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:24px;max-height:88vh;overflow-y:auto;border-top:2px solid var(--accent);}
@@ -125,7 +125,7 @@ main{flex:1;padding:10px 12px 70px;overflow:hidden;display:flex;flex-direction:c
   </header>
   <main>
     <!-- STARTSEITE -->
-    <div id="page-start" class="page active" style="flex:1;display:flex;flex-direction:column;">
+    <div id="page-start" class="page page-flex-active active">
       <div style="display:flex;flex-direction:column;gap:12px;flex:1;padding-top:16px;">
         <button onclick="showMain('wochenplan')" style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:0 24px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);width:100%;text-align:left;flex:1;">
           <div style="font-size:52px;">📅</div>
@@ -159,13 +159,13 @@ main{flex:1;padding:10px 12px 70px;overflow:hidden;display:flex;flex-direction:c
     </div>
 
     <!-- WOCHENPLAN -->
-    <div id="page-wochenplan" class="page" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div id="page-wochenplan" class="page page-flex-active" style="overflow:hidden;">
       <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
         <button class="sub-btn active" id="wp-tab-mittag" onclick="showWpTab('mittag')">🍽️ Mittag</button>
         <button class="sub-btn" id="wp-tab-vesper" onclick="showWpTab('vesper')">🍎 Vesper</button>
         <div id="wp-tab-einkauf" style="display:none;"></div>
       </div>
-      <div id="wp-mittag" style="flex-direction:column;flex:1;overflow:hidden;">
+      <div id="wp-mittag" style="flex-direction:column;flex:1;overflow:hidden;display:none;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;background:var(--surface);border-radius:12px;padding:8px 12px;flex-shrink:0;">
           <button onclick="changeCalWeek(-1)" id="cal-prev" style="background:none;border:none;font-size:22px;color:var(--accent);cursor:pointer;padding:0 8px;">‹</button>
           <span id="cal-month" style="font-size:13px;font-weight:600;color:var(--text);"></span>
@@ -204,8 +204,8 @@ main{flex:1;padding:10px 12px 70px;overflow:hidden;display:flex;flex-direction:c
     </div>
 
     <!-- KOCHBUCH -->
-    <div id="page-kochbuch" class="page" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
-      <div id="kb-kategorien" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div id="page-kochbuch" class="page page-flex-active" style="overflow:hidden;">
+      <div id="kb-kategorien">
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
           <div style="position:relative;flex:1;">
             <input type="text" id="kb-global-search" placeholder="🔍 Rezept suchen… z.B. Nudeln Hühnchen" oninput="globalKbSearch(this.value)" style="padding-right:42px;margin-bottom:0;">
@@ -378,7 +378,7 @@ function showMain(section){
 }
 function showWpTab(tab){
   ['mittag','vesper','einkauf'].forEach(t=>{
-    const el=document.getElementById('wp-'+t);if(el)el.style.display=t===tab?(t==='mittag'||t==='vesper'?'flex':'block'):'none';
+    const el=document.getElementById('wp-'+t);if(el){if(t===tab){el.style.display=t==='einkauf'?'flex':(t==='vesper'||t==='mittag'?'flex':'block');}else{el.style.display='none';}}
     const btn=document.getElementById('wp-tab-'+t);if(btn)btn.classList.toggle('active',t===tab);
   });
   // update bottom bar
@@ -424,7 +424,7 @@ function showKategorie(kat){
   updateHomeBtn();
   currentKbKat=kat;
   const cat=KB_CATEGORIES[kat];
-  document.getElementById('kb-kategorien').style.display='none';
+  document.getElementById('kb-kategorien').classList.remove('kb-visible');
   document.getElementById('kb-rezepte').style.display='block';
   document.getElementById('kb-kategorie-titel').textContent=cat.icon+' '+cat.label;
   document.getElementById('kb-search').value='';
@@ -439,13 +439,14 @@ function showKategorie(kat){
   renderKbRecipes(cat);
 }
 function backToKategorien(){
+  document.getElementById('kb-kategorien').classList.add('kb-visible');
   navStack=[];updateHomeBtn();
   const inp=document.getElementById('kb-global-search');
   if(inp)inp.value='';
   const res=document.getElementById('kb-global-results');
   if(res)res.style.display='none';
   document.querySelectorAll('#kb-kategorien button[onclick*="showKategorie"]').forEach(b=>b.style.display='');
-  document.getElementById('kb-kategorien').style.display='block';
+  const kbk=document.getElementById('kb-kategorien');kbk.classList.add('kb-visible');
   document.getElementById('kb-rezepte').style.display='none';
   // Sicher alle Detail/Form-Felder zurücksetzen
   const rdet=document.getElementById('kb-recipe-detail');if(rdet){rdet.style.display='none';rdet.innerHTML='';}
