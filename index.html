@@ -239,8 +239,8 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;}
           <button onclick="showKategorie('vesper-kb')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
             <div style="font-size:64px;line-height:1.1;">🍎</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Vesper</div>
           </button>
-          <button style="background:var(--card);border:1.5px dashed var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:default;box-shadow:var(--shadow);opacity:.45;">
-            <div style="font-size:64px;line-height:1.1;">⭐</div><div style="font-size:11px;font-weight:600;color:var(--muted);text-align:center;">Reserve</div>
+          <button onclick="showKategorie('zuletzt')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
+            <div style="font-size:64px;line-height:1.1;">🕐</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Zuletzt hinzugefügt</div>
           </button>
           <button style="background:var(--card);border:1.5px dashed var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:default;box-shadow:var(--shadow);opacity:.45;">
             <div style="font-size:64px;line-height:1.1;">⭐</div><div style="font-size:11px;font-weight:600;color:var(--muted);text-align:center;">Reserve</div>
@@ -384,6 +384,11 @@ const KB_CATEGORIES={
   backen:{label:'Backen',icon:'🎂',filter:r=>(r.tags||[]).some(t=>t.toLowerCase().includes('back')),ctx:'mittag'},
   ofen:{label:'Ofengerichte',icon:'🫕',filter:r=>detectCategory(r)==='ofen'||(r.tags||[]).some(t=>t.toLowerCase().includes('ofen')),ctx:'mittag'},
   'vesper-kb':{label:'Vesper',icon:'🍎',filter:r=>true,ctx:'vesper'},
+  'zuletzt':{label:'Zuletzt hinzugefügt',icon:'🕐',filter:(r,all)=>{
+    const sorted=[...all].sort((a,b)=>String(b.id).localeCompare(String(a.id)));
+    const last10ids=sorted.slice(0,10).map(x=>x.id);
+    return last10ids.includes(r.id);
+  },ctx:'mittag'},
 };
 let currentKbKat=null;
 function globalKbSearch(q){
@@ -443,8 +448,16 @@ function backToKategorien(){
   currentKbKat=null;
 }
 function renderKbRecipes(cat){
-  const pool=cat.ctx==='vesper'?vesperRecipes:recipes;
-  const filtered=pool.filter(cat.filter);
+  let pool, filtered;
+  if(cat.label==='Zuletzt hinzugefügt'){
+    const all=[...recipes,...vesperRecipes];
+    const sorted=all.sort((a,b)=>String(b.id).localeCompare(String(a.id)));
+    filtered=sorted.slice(0,10);
+    pool=all;
+  } else {
+    pool=cat.ctx==='vesper'?vesperRecipes:recipes;
+    filtered=pool.filter(cat.filter);
+  }
   document.getElementById('kb-recipe-list').innerHTML=filtered.length
     ?filtered.map(r=>recipeCardHTML(r,cat.ctx==='vesper'?'vesper':'mittag')).join('')
     :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">${cat.icon}</div><p>Noch keine ${cat.label}.</p></div>`;
@@ -589,7 +602,8 @@ async function handlePhotoKb(e,ctx){
     try{
       const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:`Analysiere dieses Essensfoto. Antworte NUR mit validem JSON:
 {"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge"}],"steps":["Schritt"]}
-Max 5 Schritte auf Deutsch.`}]}]})});
+WICHTIG: Übernimm alle Mengenangaben EXAKT wie geschrieben (z.B. 140g bleibt 140g, nicht runden oder schätzen).
+Wenn handgeschrieben: lies die Zahlen sorgfältig. Max 5 Schritte auf Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
       if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');if(p.ingredients?.length)formData.ingredients=p.ingredients;if(p.steps?.length)formData.steps=p.steps;
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
@@ -689,7 +703,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v11.2';
+  const VERSION='v11.3';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -854,8 +868,46 @@ function toggleRecipeInfo(id){
   if(el)el.style.display=el.style.display==='none'?'block':'none';
 }
 let stepDragIdx=null;
+let stepTouchDragIdx=null, stepTouchClone=null, stepTouchCtx=null, stepTouchIsKb=null, stepTouchFormId=null;
 function stepDragStart(e,i){stepDragIdx=i;e.dataTransfer.effectAllowed='move';}
 function stepDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function stepTouchStart(e,i){
+  stepTouchDragIdx=i;
+  const el=e.currentTarget;
+  stepTouchClone=el.cloneNode(true);
+  const rect=el.getBoundingClientRect();
+  stepTouchClone.style.cssText=`position:fixed;width:${rect.width}px;opacity:.85;pointer-events:none;z-index:9999;left:${rect.left}px;top:${rect.top}px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.2);`;
+  document.body.appendChild(stepTouchClone);
+  el.style.opacity='.35';
+  e.preventDefault();
+}
+function stepTouchMove(e){
+  if(!stepTouchClone)return;
+  const t=e.touches[0];
+  stepTouchClone.style.top=(t.clientY-30)+'px';
+  e.preventDefault();
+}
+function stepTouchEnd(e,i,ctx,isKb,formId){
+  if(!stepTouchClone)return;
+  const t=e.changedTouches[0];
+  stepTouchClone.remove();stepTouchClone=null;
+  e.currentTarget.style.opacity='';
+  // Finde das Ziel-Element
+  const target=document.elementFromPoint(t.clientX,t.clientY)?.closest('[data-step-idx]');
+  if(target&&stepTouchDragIdx!==null){
+    const targetIdx=parseInt(target.dataset.stepIdx);
+    if(targetIdx!==stepTouchDragIdx){
+      const fn=document.getElementById('f-name');if(fn)formData.name=fn.value;
+      const ft=document.getElementById('f-time');if(ft)formData.time=ft.value;
+      const fs=document.getElementById('f-servings');if(fs)formData.servings=fs.value;
+      const fg=document.getElementById('f-tags');if(fg)formData.tags=fg.value;
+      const moved=formData.steps.splice(stepTouchDragIdx,1)[0];
+      formData.steps.splice(targetIdx,0,moved);
+      if(isKb==='true')renderKbAddForm(ctx,formId);else renderAddForm(ctx);
+    }
+  }
+  stepTouchDragIdx=null;
+}
 function stepDrop(e,targetIdx,ctx,isKb,formId){
   e.preventDefault();
   if(stepDragIdx===null||stepDragIdx===targetIdx)return;
@@ -1054,7 +1106,7 @@ function renderAddForm(ctx){
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipe('${ctx}')">Rezept speichern ✓</button>`;
 }
 function ingRowHTML(i,ing,ctx,isKb,formId){return`<div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;margin-bottom:7px;"><input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value"><input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value"><button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button></div>`;}
-function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;cursor:grab;background:var(--surface);border-radius:8px;padding:6px;"><div style="color:var(--muted);font-size:16px;padding-top:10px;flex-shrink:0;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
+function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;cursor:grab;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);"><div style="color:var(--muted);font-size:18px;padding-top:10px;flex-shrink:0;touch-action:none;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
 function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;formData.tags=document.getElementById('f-tags').value;}
 function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:''});renderAddForm(ctx);}
 function removeIng(i,ctx){syncFields();formData.ingredients.splice(i,1);renderAddForm(ctx);}
