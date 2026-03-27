@@ -67,6 +67,10 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touc
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 22px;border-radius:22px;font-size:13px;font-weight:600;z-index:999;animation:fadeUp .2s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.2);}
 .recipe-card{transition:transform .15s;}.recipe-card:active{transform:scale(.98);}
 *{scrollbar-width:none;-ms-overflow-style:none;}::-webkit-scrollbar{display:none;}
+#kb-add-form::-webkit-scrollbar,#kb-add-vesper-form::-webkit-scrollbar{display:block;width:6px;}
+#kb-add-form::-webkit-scrollbar-track,#kb-add-vesper-form::-webkit-scrollbar-track{background:var(--surface);border-radius:3px;}
+#kb-add-form::-webkit-scrollbar-thumb,#kb-add-vesper-form::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+#kb-add-form,#kb-add-vesper-form{scrollbar-width:thin;scrollbar-color:var(--border) var(--surface);}
 .type-badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;}
 .type-badge.veg{background:rgba(76,175,80,.12);color:var(--veg);border:1px solid rgba(76,175,80,.3);}
 .type-badge.meat{background:rgba(224,112,64,.12);color:var(--meat);border:1px solid rgba(224,112,64,.3);}
@@ -680,14 +684,14 @@ WICHTIG:
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
-          ings.push({name:ing.name,amount:ing.amount,group:ing.group||'',_ai:true});
+          // Zutaten kommen direkt aus Foto → kein _ai Flag
+          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
         });
         formData.ingredients=ings;
-        formData._aiIngredients=true;
       }
       if((!mode||mode==='all'||mode==='steps')&&p.steps?.length){
         formData.steps=p.steps;
-        formData._aiSteps=true;
+        formData._aiSteps=true; // Schritte formuliert KI selbst → rot+fett
       }
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderKbAddForm(ctx,formId);
@@ -789,7 +793,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.11';
+  const VERSION='v0.11.12';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1216,14 +1220,24 @@ function ingRowHTML(i,ing,ctx,isKb,formId){
       <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:18px;padding:0 2px;line-height:1;">×</button>
     </div>`;
   }
-  const parts=(ing.amount||'').match(/^([\d.,\/]+)?\s*(.*)$/)||['','',''];
-  const qty=ing.qty!==undefined?ing.qty:parts[1]||'';
-  const unit=ing.unit!==undefined?ing.unit:parts[2]||'';
-  const aiStyle=ing._ai?'color:var(--red);font-weight:700;':'';
+  // Menge/Einheit korrekt aufteilen: "1/2 Liter" → qty="1/2" unit="Liter"
+  // "150g" → qty="150" unit="g", "2 EL" → qty="2" unit="EL"
+  let qty='', unit='';
+  if(ing.qty!==undefined||ing.unit!==undefined){
+    qty=ing.qty||''; unit=ing.unit||'';
+  } else {
+    const amt=ing.amount||'';
+    // Brüche wie 1/2, 3/4 zuerst prüfen
+    const fracMatch=amt.match(/^(\d+\/\d+)\s*(.*)/);
+    const numMatch=amt.match(/^([\d.,]+)\s*(.*)/);
+    if(fracMatch){qty=fracMatch[1];unit=fracMatch[2]||'';}
+    else if(numMatch){qty=numMatch[1];unit=numMatch[2]||'';}
+    else{qty='';unit=amt;}
+  }
   return`<div style="display:grid;grid-template-columns:55px 65px 1fr auto;gap:5px;margin-bottom:7px;">
-    <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit;formData.ingredients[${i}]._ai=false;" style="text-align:center;${aiStyle}">
-    <input type="text" value="${escHtml(unit)}" placeholder="Einheit" oninput="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value;formData.ingredients[${i}]._ai=false;" style="text-align:center;${aiStyle}">
-    <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value;formData.ingredients[${i}]._ai=false;" style="${aiStyle}">
+    <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit;" style="text-align:center;">
+    <input type="text" value="${escHtml(unit)}" placeholder="Einheit" oninput="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value;" style="text-align:center;">
+    <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value;">
     <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button>
   </div>`;
 }
@@ -1261,14 +1275,14 @@ async function handlePhoto(e,ctx){
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
-          ings.push({name:ing.name,amount:ing.amount,group:ing.group||'',_ai:true});
+          // Zutaten kommen direkt aus Foto → kein _ai Flag
+          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
         });
         formData.ingredients=ings;
-        formData._aiIngredients=true;
       }
       if((!mode||mode==='all'||mode==='steps')&&p.steps?.length){
         formData.steps=p.steps;
-        formData._aiSteps=true;
+        formData._aiSteps=true; // Schritte formuliert KI selbst → rot+fett
       }
     }catch(err){formData.aiError='⚠️ KI-Analyse fehlgeschlagen: '+(err.message||'Fehler');}
     renderAddForm(ctx);if(formData.aiError){const el=document.getElementById('ai-error-'+ctx);if(el){el.style.display='block';el.textContent=formData.aiError;}}
