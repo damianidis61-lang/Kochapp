@@ -31,7 +31,7 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 .card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
 .tag{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:12px;color:var(--muted);}
 .label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;}
-.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}.page-flex-active{display:none;}.page-flex-active{display:none;}.page-flex-active.active{display:flex;flex-direction:column;flex:1;overflow:hidden;}#kb-kategorien{display:none;}#kb-kategorien.kb-visible{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}.page-flex-active{display:none;}.page-flex-active.active{display:flex;flex-direction:column;flex:1;overflow:hidden;}#kb-kategorien{display:none;}#kb-kategorien.kb-visible{display:flex;flex-direction:column;flex:1;overflow:hidden;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;animation:fadeUp .2s;}
 .modal-box{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:24px;max-height:88vh;overflow-y:auto;border-top:2px solid var(--accent);}
@@ -210,7 +210,7 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touc
     </div>
 
     <!-- KOCHBUCH -->
-    <div id="page-kochbuch" class="page page-flex-active" style="overflow:hidden;display:flex;flex-direction:column;">
+    <div id="page-kochbuch" class="page page-flex-active" style="overflow:hidden;">
       <div id="kb-kategorien">
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;">
           <div style="position:relative;flex:1;">
@@ -796,7 +796,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.15';
+  const VERSION='v0.11.16';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
