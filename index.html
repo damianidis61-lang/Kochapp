@@ -576,7 +576,7 @@ function saveRecipeKb(ctx,formId){
     if(ctx==='vesper')vesperRecipes.push(r);else recipes.push(r);
     toast('✓ Rezept gespeichert!');
   }
-  saveAll();backFromKbForm(ctx);
+  saveAll().then(()=>backFromKbForm(ctx)).catch(()=>backFromKbForm(ctx));
 }
 async function handlePhotoKb(e,ctx){
   const file=e.target.files[0];if(!file)return;
@@ -689,7 +689,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v11.1';
+  const VERSION='v11.2';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -852,6 +852,24 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 function toggleRecipeInfo(id){
   const el=document.getElementById(id);
   if(el)el.style.display=el.style.display==='none'?'block':'none';
+}
+let stepDragIdx=null;
+function stepDragStart(e,i){stepDragIdx=i;e.dataTransfer.effectAllowed='move';}
+function stepDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function stepDrop(e,targetIdx,ctx,isKb,formId){
+  e.preventDefault();
+  if(stepDragIdx===null||stepDragIdx===targetIdx)return;
+  // Sync fields first
+  const fn=document.getElementById('f-name');if(fn)formData.name=fn.value;
+  const ft=document.getElementById('f-time');if(ft)formData.time=ft.value;
+  const fs=document.getElementById('f-servings');if(fs)formData.servings=fs.value;
+  const fg=document.getElementById('f-tags');if(fg)formData.tags=fg.value;
+  // Swap steps
+  const moved=formData.steps.splice(stepDragIdx,1)[0];
+  formData.steps.splice(targetIdx,0,moved);
+  stepDragIdx=null;
+  if(isKb==='true')renderKbAddForm(ctx,formId);
+  else renderAddForm(ctx);
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function parseMinutes(t){if(!t)return null;const m=t.match(/(\d+)/);return m?parseInt(m[1]):null;}
@@ -1036,7 +1054,7 @@ function renderAddForm(ctx){
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipe('${ctx}')">Rezept speichern ✓</button>`;
 }
 function ingRowHTML(i,ing,ctx,isKb,formId){return`<div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;margin-bottom:7px;"><input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value"><input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value"><button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button></div>`;}
-function stepRowHTML(i,s,ctx,isKb,formId){return`<div style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;"><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
+function stepRowHTML(i,s,ctx,isKb,formId){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;cursor:grab;background:var(--surface);border-radius:8px;padding:6px;"><div style="color:var(--muted);font-size:16px;padding-top:10px;flex-shrink:0;">☰</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
 function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;formData.tags=document.getElementById('f-tags').value;}
 function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:''});renderAddForm(ctx);}
 function removeIng(i,ctx){syncFields();formData.ingredients.splice(i,1);renderAddForm(ctx);}
