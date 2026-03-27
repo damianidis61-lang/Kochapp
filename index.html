@@ -31,7 +31,7 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 .card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);}
 .tag{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:12px;color:var(--muted);}
 .label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;}
-.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}.page-flex-active{display:none;}.page-flex-active.active{display:flex;flex-direction:column;flex:1;overflow:hidden;}#kb-kategorien{display:none;}#kb-kategorien.kb-visible{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.page{display:none;animation:fadeUp .28s ease;}.page.active{display:block;}.page-flex-active{display:none;}.page-flex-active{display:none;}.page-flex-active.active{display:flex;flex-direction:column;flex:1;overflow:hidden;}#kb-kategorien{display:none;}#kb-kategorien.kb-visible{display:flex;flex-direction:column;flex:1;overflow:hidden;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;animation:fadeUp .2s;}
 .modal-box{background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:24px;max-height:88vh;overflow-y:auto;border-top:2px solid var(--accent);}
@@ -67,9 +67,9 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touc
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 22px;border-radius:22px;font-size:13px;font-weight:600;z-index:999;animation:fadeUp .2s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.2);}
 .recipe-card{transition:transform .15s;}.recipe-card:active{transform:scale(.98);}
 *{scrollbar-width:none;-ms-overflow-style:none;}::-webkit-scrollbar{display:none;}
-#kb-add-form::-webkit-scrollbar,#kb-add-vesper-form::-webkit-scrollbar{display:block;width:8px;}
+#kb-add-form::-webkit-scrollbar,#kb-add-vesper-form::-webkit-scrollbar{display:block;width:14px;}
 #kb-add-form::-webkit-scrollbar-track,#kb-add-vesper-form::-webkit-scrollbar-track{background:var(--surface);border-radius:4px;}
-#kb-add-form::-webkit-scrollbar-thumb,#kb-add-vesper-form::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px;min-height:40px;}
+#kb-add-form::-webkit-scrollbar-thumb,#kb-add-vesper-form::-webkit-scrollbar-thumb{background:var(--accent);border-radius:7px;min-height:50px;border:2px solid var(--surface);}
 #kb-add-form,#kb-add-vesper-form{scrollbar-width:thin;scrollbar-color:var(--accent) var(--surface);}
 .scroll-indicator{position:absolute;top:0;bottom:0;width:12px;background:linear-gradient(to right,var(--surface),transparent);pointer-events:none;z-index:10;}
 .scroll-indicator.left{left:0;}
@@ -220,7 +220,7 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;touc
           <button class="btn btn-primary" style="font-size:12px;padding:8px 14px;white-space:nowrap;" onclick="showAddFromKategorienMain()">+ Neu</button>
         </div>
         <div id="kb-global-results" style="display:none;"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;overflow:hidden;min-height:0;">
           <button onclick="showKategorie('fleisch')" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:var(--shadow);">
             <img src="icons/Steak.png" style="width:75px;height:75px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div style="font-size:64px;display:none;">🥩</div><div style="font-size:11px;font-weight:600;color:var(--text);text-align:center;">Fleischgerichte</div>
           </button>
@@ -676,7 +676,7 @@ async function handlePhotoKb(e,ctx,mode){
     try{
       const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:`Analysiere dieses Essensfoto. Antworte NUR mit validem JSON:
 {"name":"Name","type":"vegetarian OR meat OR fish","time":"10 min","servings":2,"tags":["Tag"],"ingredients":[{"name":"Zutat","amount":"Menge","group":"Gruppenname oder leer"}],"steps":["Schritt"]}
-WICHTIG — Lies Handschrift sehr sorgfältig:\n- Mengen EXAKT: 1200 ist nicht 120, 500 ist nicht 50. Jede Null zählt!\n- Ziffern prüfen: 0 vs 6, 1 vs 7, 3 vs 8 — im Zweifel genau hinsehen\n- Brüche: 1/2, 3/4, 1/4 exakt so übernehmen\n- Einheiten: g/kg/ml/l/EL/TL/Stück/Prise/n.B. — direkt aus Text lesen\n- Menge und Einheit zusammen im \"amount\" Feld: z.B. \"1/2 l\" oder \"150 g\"\n- Gruppen (Teig/Füllung/Käsemasse etc.) im \"group\" Feld angeben\n- Max 8 Schritte auf Deutsch.`}]}]})});
+WICHTIG:\n- amount: NUR Zahl/Bruch (300, 1/2, 3) KEINE Einheit im amount Feld!\n- Einheit separat: g,kg,ml,l,EL,TL,Stück,Prise,Pck,Glas,Dose,Bund,Scheibe,n.B.\n- Mengen EXAKT lesen: 1200g≠120g, Nullen beachten!\n- Gruppen (Teig/Füllung) im group Feld.\n- Max 8 Schritte Deutsch.`}]}]})});
       if(!resp.ok)throw new Error(`HTTP ${resp.status}`);const data=await resp.json();const p=JSON.parse((data.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
       if(!mode||mode==='all'){
         if(p.name)formData.name=p.name;if(p.type&&TYPES[p.type])formData.type=p.type;if(p.time)formData.time=p.time;if(p.servings)formData.servings=String(p.servings);if(p.tags)formData.tags=p.tags.join(', ');
@@ -686,7 +686,7 @@ WICHTIG — Lies Handschrift sehr sorgfältig:\n- Mengen EXAKT: 1200 ist nicht 1
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
           // Zutaten kommen direkt aus Foto → kein _ai Flag
-          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
+          const amt2=String(ing.amount||'');const fa=amt2.match(/^(\d+\/\d+)\s*(.*)/);const na=amt2.match(/^([\d.,]+)\s*(.*)/);let kq='',ku='';if(fa){kq=fa[1];ku=fa[2]||'';}else if(na){kq=na[1];ku=na[2]||'';}else{kq='';ku=amt2;}const vu=['g','kg','ml','l','EL','TL','Stück','Prise','Pck','Glas','Dose','Bund','Scheibe','n.B.'];const mu=vu.find(u=>ku.toLowerCase()===u.toLowerCase())||ku;ings.push({name:ing.name,amount:(kq+' '+mu).trim(),qty:kq,unit:mu,group:ing.group||''});
         });
         formData.ingredients=ings;
       }
@@ -796,7 +796,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.14';
+  const VERSION='v0.11.15';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1239,11 +1239,11 @@ function ingRowHTML(i,ing,ctx,isKb,formId){
     else if(numMatch){qty=numMatch[1];unit=numMatch[2]||'';}
     else{qty='';unit=amt;}
   }
-  return`<div style="display:grid;grid-template-columns:85px 90px 1fr auto;gap:6px;margin-bottom:7px;">
-    <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit;" style="text-align:center;">
-    <input type="text" value="${escHtml(unit)}" placeholder="Einheit" oninput="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value;" style="text-align:center;">
+  return`<div style="display:grid;grid-template-columns:85px 100px 1fr auto;gap:6px;margin-bottom:7px;">
+    <input type="text" value="${escHtml(qty)}" placeholder="Menge" oninput="formData.ingredients[${i}].qty=this.value;formData.ingredients[${i}].amount=this.value+' '+formData.ingredients[${i}].unit;" style="text-align:center;font-size:15px;">
+    <select onchange="formData.ingredients[${i}].unit=this.value;formData.ingredients[${i}].amount=formData.ingredients[${i}].qty+' '+this.value;" style="background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:8px 6px;font-family:'Outfit',sans-serif;font-size:14px;width:100%;-webkit-appearance:none;">${unit===""?'<option value="" selected>Einheit</option>':'<option value="">Einheit</option>'}${unit==="g"?'<option value="g" selected>g</option>':'<option value="g">g</option>'}${unit==="kg"?'<option value="kg" selected>kg</option>':'<option value="kg">kg</option>'}${unit==="ml"?'<option value="ml" selected>ml</option>':'<option value="ml">ml</option>'}${unit==="l"?'<option value="l" selected>l</option>':'<option value="l">l</option>'}${unit==="EL"?'<option value="EL" selected>EL</option>':'<option value="EL">EL</option>'}${unit==="TL"?'<option value="TL" selected>TL</option>':'<option value="TL">TL</option>'}${unit==="Stück"?'<option value="Stück" selected>Stück</option>':'<option value="Stück">Stück</option>'}${unit==="Prise"?'<option value="Prise" selected>Prise</option>':'<option value="Prise">Prise</option>'}${unit==="Pck"?'<option value="Pck" selected>Pck</option>':'<option value="Pck">Pck</option>'}${unit==="Glas"?'<option value="Glas" selected>Glas</option>':'<option value="Glas">Glas</option>'}${unit==="Dose"?'<option value="Dose" selected>Dose</option>':'<option value="Dose">Dose</option>'}${unit==="Bund"?'<option value="Bund" selected>Bund</option>':'<option value="Bund">Bund</option>'}${unit==="Scheibe"?'<option value="Scheibe" selected>Scheibe</option>':'<option value="Scheibe">Scheibe</option>'}${unit==="n.B."?'<option value="n.B." selected>n.B.</option>':'<option value="n.B.">n.B.</option>'}</select>
     <input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value;">
-    <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button>
+    <button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:` removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button>
   </div>`;
 }
 function stepRowHTML(i,s,ctx,isKb,formId,isAi){return`<div draggable="true" data-step-idx="${i}" ondragstart="stepDragStart(event,${i})" ondragover="stepDragOver(event)" ondrop="stepDrop(event,${i},'${ctx}','${isKb}','${formId}')" style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;background:var(--surface);border-radius:8px;padding:6px;border:1.5px solid var(--border);touch-action:pan-y;"><div ontouchstart="stepTouchStart(event,${i})" ontouchmove="stepTouchMove(event)" ontouchend="stepTouchEnd(event,${i},'${ctx}','${isKb}','${formId}')" style="color:var(--accent);font-size:22px;padding-top:8px;flex-shrink:0;touch-action:none;cursor:grab;padding-left:2px;padding-right:4px;user-select:none;">↕</div><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;touch-action:pan-y;${isAi?'color:var(--red);font-weight:700;':''}" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value;formData._aiSteps=false;renderKbAddForm&&renderKbAddForm;">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
@@ -1281,7 +1281,7 @@ async function handlePhoto(e,ctx){
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
           // Zutaten kommen direkt aus Foto → kein _ai Flag
-          ings.push({name:ing.name,amount:ing.amount,group:ing.group||''});
+          const amt2=String(ing.amount||'');const fa=amt2.match(/^(\d+\/\d+)\s*(.*)/);const na=amt2.match(/^([\d.,]+)\s*(.*)/);let kq='',ku='';if(fa){kq=fa[1];ku=fa[2]||'';}else if(na){kq=na[1];ku=na[2]||'';}else{kq='';ku=amt2;}const vu=['g','kg','ml','l','EL','TL','Stück','Prise','Pck','Glas','Dose','Bund','Scheibe','n.B.'];const mu=vu.find(u=>ku.toLowerCase()===u.toLowerCase())||ku;ings.push({name:ing.name,amount:(kq+' '+mu).trim(),qty:kq,unit:mu,group:ing.group||''});
         });
         formData.ingredients=ings;
       }
