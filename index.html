@@ -583,7 +583,7 @@ WICHTIG:\n- JSON Format: {"name":"Zutat","amount":"NUR_ZAHL_ODER_BRUCH","unit":"
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
-if(ing.unit!==undefined){ings.push({name:ing.name,amount:(String(ing.amount||'')+' '+ing.unit).trim(),qty:String(ing.amount||''),unit:ing.unit||'',group:ing.group||''});continue;}
+if(ing.unit!==undefined){ings.push({name:ing.name,amount:(String(ing.amount||'')+' '+ing.unit).trim(),qty:String(ing.amount||''),unit:ing.unit||'',group:ing.group||''});return;}
 const amt2=String(ing.amount||'');const fa=amt2.match(/^(\d+\/\d+)\s*(.*)/);const na=amt2.match(/^([\d.,]+)\s*(.*)/);let kq='',ku='';if(fa){kq=fa[1];ku=fa[2]||'';}else if(na){kq=na[1];ku=na[2]||'';}else{kq='';ku=amt2;}const vu=['g','kg','ml','l','EL','TL','Stück','Prise','Pck','Glas','Dose','Bund','Scheibe','n.B.'];
 const kuFirst=ku.split(' ')[0];const mu=vu.find(u=>ku.toLowerCase()===u.toLowerCase())||vu.find(u=>kuFirst.toLowerCase()===u.toLowerCase())||'';ings.push({name:ing.name,amount:(kq+' '+mu).trim(),qty:kq,unit:mu,group:ing.group||''});
         });
@@ -691,7 +691,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v0.11.18';
+  const VERSION='v0.11.19';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1149,7 +1149,7 @@ async function handlePhoto(e,ctx){
         const ings=[];let lastGrp='';
         p.ingredients.forEach(ing=>{
           if(ing.group&&ing.group!==lastGrp){lastGrp=ing.group;ings.push({name:ing.group,amount:'',_isGroup:true});}
-if(ing.unit!==undefined){ings.push({name:ing.name,amount:(String(ing.amount||'')+' '+ing.unit).trim(),qty:String(ing.amount||''),unit:ing.unit||'',group:ing.group||''});continue;}
+if(ing.unit!==undefined){ings.push({name:ing.name,amount:(String(ing.amount||'')+' '+ing.unit).trim(),qty:String(ing.amount||''),unit:ing.unit||'',group:ing.group||''});return;}
 const amt2=String(ing.amount||'');const fa=amt2.match(/^(\d+\/\d+)\s*(.*)/);const na=amt2.match(/^([\d.,]+)\s*(.*)/);let kq='',ku='';if(fa){kq=fa[1];ku=fa[2]||'';}else if(na){kq=na[1];ku=na[2]||'';}else{kq='';ku=amt2;}const vu=['g','kg','ml','l','EL','TL','Stück','Prise','Pck','Glas','Dose','Bund','Scheibe','n.B.'];
 const kuFirst=ku.split(' ')[0];const mu=vu.find(u=>ku.toLowerCase()===u.toLowerCase())||vu.find(u=>kuFirst.toLowerCase()===u.toLowerCase())||'';ings.push({name:ing.name,amount:(kq+' '+mu).trim(),qty:kq,unit:mu,group:ing.group||''});
         });
