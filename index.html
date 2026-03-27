@@ -524,14 +524,14 @@ function renderKbAddForm(ctx,formId){
         <h3 style="font-size:14px;font-weight:600;">🧄 Zutaten</h3>
         <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRowKb('${ctx}','${formId}')">+ Zutat</button>
       </div>
-      <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx)).join('')}</div>
+      <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx,true,formId)).join('')}</div>
     </div>
     <div class="card" style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <h3 style="font-size:14px;font-weight:600;">👩‍🍳 Schritte</h3>
         <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addStepRowKb('${ctx}','${formId}')">+ Schritt</button>
       </div>
-      <div id="step-rows">${formData.steps.map((s,i)=>stepRowHTML(i,s,ctx)).join('')}</div>
+      <div id="step-rows">${formData.steps.map((s,i)=>stepRowHTML(i,s,ctx,true,formId)).join('')}</div>
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipeKb('${ctx}','${formId}')">Rezept speichern ✓</button>`;
 }
@@ -546,6 +546,8 @@ function backFromKbForm(ctx){
 }
 function addIngRowKb(ctx,formId){syncFields();formData.ingredients.push({name:'',amount:''});renderKbAddForm(ctx,formId);}
 function addStepRowKb(ctx,formId){syncFields();formData.steps.push('');renderKbAddForm(ctx,formId);}
+function removeIngKb(i,ctx,formId){syncFields();formData.ingredients.splice(i,1);renderKbAddForm(ctx,formId);}
+function removeStepKb(i,ctx,formId){syncFields();formData.steps.splice(i,1);renderKbAddForm(ctx,formId);}
 function autoAssignKategorie(r,ctx){
   if(ctx==='vesper')return;
   const text=(r.name+' '+(r.tags||[]).join(' ')+' '+(r.ingredients||[]).map(i=>i.name).join(' ')).toLowerCase();
@@ -665,7 +667,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v9.5';
+  const VERSION='v9.8';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1057,7 +1059,7 @@ function renderAddForm(ctx){
     <input type="text" id="f-tags" value="${escHtml(formData.tags)}" placeholder="Schnell, Kinder" style="margin-bottom:16px;">
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:14px;font-weight:600;">🧄 Zutaten</h3><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addIngRow('${ctx}')">+ Zutat</button></div>
-      <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx)).join('')}</div>
+      <div id="ing-rows">${formData.ingredients.map((ing,i)=>ingRowHTML(i,ing,ctx,true,formId)).join('')}</div>
     </div>
     <div class="card" style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:14px;font-weight:600;">👩‍🍳 Schritte</h3><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="addStepRow('${ctx}')">+ Schritt</button></div>
@@ -1065,8 +1067,8 @@ function renderAddForm(ctx){
     </div>
     <button class="btn btn-primary" style="width:100%;font-size:15px;" onclick="saveRecipe('${ctx}')">Rezept speichern ✓</button>`;
 }
-function ingRowHTML(i,ing,ctx){return`<div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;margin-bottom:7px;"><input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value"><input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value"><button onclick="removeIng(${i},'${ctx}')" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button></div>`;}
-function stepRowHTML(i,s,ctx){return`<div style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;"><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="removeStep(${i},'${ctx}')" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
+function ingRowHTML(i,ing,ctx,isKb,formId){return`<div style="display:grid;grid-template-columns:90px 1fr auto;gap:6px;margin-bottom:7px;"><input type="text" value="${escHtml(ing.amount)}" placeholder="Menge" oninput="formData.ingredients[${i}].amount=this.value"><input type="text" value="${escHtml(ing.name)}" placeholder="Zutat" oninput="formData.ingredients[${i}].name=this.value"><button onclick="${isKb?`removeIngKb(${i},'${ctx}','${formId}')`:`removeIng(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;line-height:1;">×</button></div>`;}
+function stepRowHTML(i,s,ctx,isKb,formId){return`<div style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;"><div class="step-num" style="margin-top:10px;">${i+1}</div><textarea rows="2" style="resize:vertical;font-size:14px;" placeholder="Schritt ${i+1}" oninput="formData.steps[${i}]=this.value">${escHtml(s)}</textarea><button onclick="${isKb?`removeStepKb(${i},'${ctx}','${formId}')`:`removeStep(${i},'${ctx}')`}" style="background:none;border:none;color:var(--red);font-size:20px;padding:0 4px;margin-top:8px;line-height:1;">×</button></div>`;}
 function syncFields(){const n=document.getElementById('f-name');if(!n)return;formData.name=n.value;formData.time=document.getElementById('f-time').value;formData.servings=document.getElementById('f-servings').value;formData.tags=document.getElementById('f-tags').value;}
 function addIngRow(ctx){syncFields();formData.ingredients.push({name:'',amount:''});renderAddForm(ctx);}
 function removeIng(i,ctx){syncFields();formData.ingredients.splice(i,1);renderAddForm(ctx);}
