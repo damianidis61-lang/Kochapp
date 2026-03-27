@@ -460,8 +460,10 @@ function filterKbRecipes(q){
     :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><p>Keine Ergebnisse für "${q}"</p></div>`;
 }
 function showAddFromKategorienMain(){
-  // Default to mittag wenn keine Kategorie gewählt
   if(!currentKbKat)currentKbKat='fleisch';
+  // kb-rezepte muss sichtbar sein damit das Formular angezeigt werden kann
+  document.getElementById('kb-kategorien').classList.remove('kb-visible');
+  document.getElementById('kb-rezepte').style.display='flex';
   showAddFromKategorie();
 }
 function showAddFromKategorie(){
@@ -671,7 +673,7 @@ function deleteKbRecipe(id,ctx){
 function showKeyModal(){
   const modal=document.getElementById('picker-modal');modal.style.display='block';
   const masked=API_KEY.slice(0,8)+'…'+API_KEY.slice(-4);
-  const VERSION='v10.9';
+  const VERSION='v11.0';
   modal.innerHTML=`<div class="modal-overlay" onclick="closePicker()"><div class="modal-box" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div class="serif" style="font-size:20px;">🔑 API-Key</div><span style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">${VERSION}</span></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Dein Key — alle Geräte mit demselben Key teilen die Rezepte</p>
@@ -1118,6 +1120,10 @@ function onTouchStart(e, type, day, week, kat){
   const touch=e.touches[0];
   touchDragEl=e.currentTarget;
   dragSource={type,day,week,kat};
+  // Tap-Detection: Startposition merken
+  touchDragEl._tapStartX=touch.clientX;
+  touchDragEl._tapStartY=touch.clientY;
+  touchDragEl._tapStartTime=Date.now();
   const rect=touchDragEl.getBoundingClientRect();
   touchOffX=touch.clientX-rect.left;
   touchOffY=touch.clientY-rect.top;
@@ -1152,9 +1158,25 @@ function onTouchEnd(e){
   if(!touchClone)return;
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
   const touch=e.changedTouches[0];
-  if(touchDragEl)touchDragEl.style.opacity='';
+  const el=touchDragEl;
+  if(el)el.style.opacity='';
   touchClone.remove();touchClone=null;
   document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  // Prüfen ob es ein kurzer Tap war (kein Drag)
+  const dx=Math.abs(touch.clientX-(el?._tapStartX||touch.clientX));
+  const dy=Math.abs(touch.clientY-(el?._tapStartY||touch.clientY));
+  const dt=Date.now()-(el?._tapStartTime||Date.now());
+  if(dx<10&&dy<10&&dt<300&&dragSource){
+    // Kurzer Tap → Slot-Detail öffnen
+    dragSource=null;touchDragEl=null;
+    const s=e.currentTarget||el;
+    const type=s?.dataset?.dtype||dragSource?.type;
+    const day=s?.dataset?.day||dragSource?.day;
+    const week=parseInt(s?.dataset?.week||currentWocheTab);
+    const kat=s?.dataset?.kat||null;
+    if(day)openSlotDetail(day,week,type,kat);
+    return;
+  }
   const target=document.elementFromPoint(touch.clientX,touch.clientY)?.closest('.week-slot[data-drag]');
   if(target&&dragSource){
     const type=target.dataset.dtype;
