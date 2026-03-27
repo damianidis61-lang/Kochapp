@@ -50,8 +50,8 @@ button{cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;border
 @keyframes spin{to{transform:rotate(360deg);}}
 #app{max-width:520px;margin:0 auto;height:100vh;height:-webkit-fill-available;display:flex;flex-direction:column;overflow:hidden;}
 header{padding:14px 18px 0;border-bottom:1.5px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;}
-.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-nav{display:flex;gap:3px;}
+
+
 .nav-btn{flex:1;padding:9px 4px;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid transparent;border-bottom:none;transition:all .18s;}
 .nav-btn.active{background:var(--card);color:var(--accent);border-color:var(--border);}
 .nav-btn .ni{font-size:19px;}
@@ -59,7 +59,7 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;}
 .bottom-bar{width:100%;background:var(--bg);border-top:1.5px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;z-index:100;flex-shrink:0;}
 .bottom-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;transition:all .18s;}
 .bottom-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(240,165,0,.08);}
-.sub-nav{display:flex;gap:8px;margin-bottom:16px;}
+
 .sub-btn{flex:1;padding:9px 8px;border-radius:10px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);transition:all .18s;text-align:center;}
 .sub-btn.active{background:var(--card);color:var(--accent);border-color:var(--accent);}
 #api-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg);}
@@ -262,22 +262,6 @@ main{flex:1;padding:12px;overflow:hidden;display:flex;flex-direction:column;}
         <div id="kb-vesper-detail" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
         <div id="kb-add-vesper-form" style="display:none;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;"></div>
       </div>
-    </div>
-
-    <!-- Legacy pages (hidden, kept for compatibility) -->
-    <div id="page-rezepte" style="display:none;">
-      <div id="recipe-list"></div>
-      <div id="recipe-detail" style="display:none;"></div>
-      <div id="add-recipe-form" style="display:none;"></div>
-      <div id="vesper-recipe-list"></div>
-      <div id="vesper-recipe-detail" style="display:none;"></div>
-      <div id="add-vesper-recipe-form" style="display:none;"></div>
-      <span id="recipe-count"></span>
-      <span id="vesper-recipe-count"></span>
-      <div id="mittag-toolbar"></div>
-      <div id="vesper-r-toolbar"></div>
-      <div id="sub-page-mittag"></div>
-      <div id="sub-page-vesper-r"></div>
     </div>
   </main>
 
@@ -816,17 +800,6 @@ function confirmNewKey(){
   </div></div>`;
 }
 function changeKey(){document.getElementById('api-key-input').value='';document.getElementById('api-screen').style.display='flex';document.getElementById('app').style.display='none';}
-function showTab(tab){
-  currentTab=tab;
-  ['vesper','woche','rezepte','einkauf'].forEach(t=>{const p=document.getElementById('page-'+t);if(p)p.classList.toggle('active',t===tab);const n=document.getElementById('nav-'+t);if(n)n.classList.toggle('active',t===tab);});
-  document.getElementById('btn-rezepte')?.classList.toggle('active',tab==='rezepte');
-  document.getElementById('btn-einkauf')?.classList.toggle('active',tab==='einkauf');
-  updateAddButtons(tab, currentSubTab);
-  if(tab==='vesper')renderVesper();
-  if(tab==='woche')renderWeek();
-  if(tab==='rezepte')showSubTab(currentSubTab);
-  if(tab==='einkauf'){renderShopping();}
-}
 function updateAddButtons(tab, sub){
   const center=document.getElementById('btn-add-center');
   const bm=document.getElementById('btn-add-mittag');
@@ -842,37 +815,13 @@ function updateAddButtons(tab, sub){
     if(bv)bv.style.display='none';
   }
 }
-function showSubTab(sub){
-  currentSubTab=sub;
-  ['mittag','vesper-r'].forEach(s=>{const p=document.getElementById('sub-page-'+s);if(p)p.style.display=s===sub?'block':'none';const b=document.getElementById('sub-'+s);if(b)b.classList.toggle('active',s===sub);});
-  updateAddButtons('rezepte', sub);
-  if(sub==='mittag')renderRecipes();
-  if(sub==='vesper-r')renderVesperRecipes();
-}
 let toastTimer;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',2400);}
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function parseMinutes(t){if(!t)return null;const m=t.match(/(\d+)/);return m?parseInt(m[1]):null;}
 function scaleAmount(amount,factor){if(!amount||factor===1)return amount;const m=amount.match(/^(\d+([.,]\d+)?)/);if(!m)return amount;const orig=parseFloat(m[1].replace(',','.'));const scaled=Math.round(orig*factor*10)/10;return amount.replace(m[1],scaled%1===0?String(scaled):String(scaled).replace('.',','));}
 function recipeCardHTML(r,ctx){return`<div class="card recipe-card" style="margin-bottom:10px;cursor:pointer;display:flex;gap:14px;align-items:center;padding:14px 16px;" onclick="showKbRecipeDetail('${r.id}','${ctx}')"><div style="flex:1;min-width:0;"><div class="serif" style="font-size:17px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.name)}</div><div style="font-size:12px;color:var(--muted);">⏱ ${r.time}</div></div><span style="color:var(--muted);font-size:22px;padding-right:2px;">›</span></div>`;}
-function renderRecipes(){
-  document.getElementById('recipe-count').innerHTML=`${recipes.length} Rezepte`;
-  document.getElementById('recipe-list').innerHTML=recipes.length?recipes.map(r=>recipeCardHTML(r,'mittag')).join(''):`<div style="text-align:center;padding:50px 20px;color:var(--muted);"><div style="font-size:44px;margin-bottom:12px;">📖</div><p>Noch keine Rezepte.</p></div>`;
-}
-function renderVesperRecipes(){
-  document.getElementById('vesper-recipe-count').innerHTML=`${vesperRecipes.length} Vesper-Rezepte`;
-  const filtered=vesperRecipes.filter(r=>(r.vesperKat||'salzig')===currentVesperCol);
-  document.getElementById('vesper-recipe-list').innerHTML=filtered.length
-    ?filtered.map(r=>recipeCardHTML(r,'vesper')).join('')
-    :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">${currentVesperCol==='salzig'?'🧀':'🍰'}</div><p>Noch keine ${currentVesperCol==='salzig'?'salzigen':'süßen'} Vesper-Rezepte.</p></div>`;
-}
 let currentVesperCol='salzig';
-function setVesperCol(col){
-  currentVesperCol=col;
-  document.getElementById('vesper-col-salzig').className='sub-btn'+(col==='salzig'?' active':'');
-  document.getElementById('vesper-col-suess').className='sub-btn'+(col==='suess'?' active':'');
-  renderVesperRecipes();
-}
 const SYNONYMS={
   'nudeln':['pasta','spaghetti','penne','rigatoni','tagliatelle','fettuccine','linguine','farfalle','lasagne','nudel'],
   'pasta':['nudeln','spaghetti','penne','rigatoni','tagliatelle','fettuccine','linguine','farfalle','lasagne','nudel'],
@@ -949,12 +898,6 @@ function showSearchInfo(){
     <button class="btn btn-primary" style="width:100%;" onclick="closePicker()">Verstanden ✓</button>
   </div></div>`;
 }
-function filterRecipes(q){
-  const filtered=smartSearch(recipes,q);
-  document.getElementById('recipe-list').innerHTML=filtered.length
-    ?filtered.map(r=>recipeCardHTML(r,'mittag')).join('')
-    :`<div style="text-align:center;padding:40px 20px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🔍</div><p>Keine Rezepte gefunden für "${q}"</p></div>`;
-}
 function showRecipeDetail(id,ctx,portions){
   const pool=ctx==='vesper'?vesperRecipes:recipes;
   const r=pool.find(x=>x.id===id);
@@ -962,7 +905,6 @@ function showRecipeDetail(id,ctx,portions){
   const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
   const listId=ctx==='vesper'?'vesper-recipe-list':'recipe-list';
   const formId=ctx==='vesper'?'add-vesper-recipe-form':'add-recipe-form';
-  const tbId=ctx==='vesper'?'vesper-r-toolbar':'mittag-toolbar';
   document.getElementById(listId).style.display='none';
   document.getElementById(formId).style.display='none';
   document.getElementById(tbId).style.display='none';
@@ -1004,36 +946,13 @@ function editRecipe(id,ctx){
   const listId=ctx==='vesper'?'vesper-recipe-list':'recipe-list';
   const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
   const formId=ctx==='vesper'?'add-vesper-recipe-form':'add-recipe-form';
-  const tbId=ctx==='vesper'?'vesper-r-toolbar':'mittag-toolbar';
-  document.getElementById(listId).style.display='none';
-  document.getElementById(detId).style.display='none';
-  document.getElementById(tbId).style.display='none';
+  const listEl=document.getElementById(listId);if(listEl)listEl.style.display='none';
+  const detEl=document.getElementById(detId);if(detEl)detEl.style.display='none';
   renderAddForm(ctx);
   document.getElementById(formId).style.display='block';
 }
-function backToList(ctx){
-  const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
-  const listId=ctx==='vesper'?'vesper-recipe-list':'recipe-list';
-  const tbId=ctx==='vesper'?'vesper-r-toolbar':'mittag-toolbar';
-  const formId=ctx==='vesper'?'add-vesper-recipe-form':'add-recipe-form';
-  document.getElementById(detId).style.display='none';
-  document.getElementById(formId).style.display='none';
-  document.getElementById(formId).innerHTML='';
-  document.getElementById(listId).style.display='';
-  document.getElementById(tbId).style.display='flex';
-  if(ctx==='vesper')renderVesperRecipes();else renderRecipes();
-}
 function addIngToShop(id,ctx,portions){const pool=ctx==='vesper'?vesperRecipes:recipes;const r=pool.find(x=>x.id===id),factor=(portions||r.servings)/r.servings;r.ingredients.forEach(ing=>shoppingList.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),name:ing.name,amount:scaleAmount(ing.amount,factor),source:r.name+(factor!==1?` (${portions} Port.)`:''),checked:false}));saveAll();toast('✓ Zutaten zur Einkaufsliste hinzugefügt!');}
 function deleteRecipeCtx(id,ctx){if(!confirm('Rezept wirklich löschen?'))return;if(ctx==='vesper'){vesperRecipes=vesperRecipes.filter(x=>x.id!==id);Object.keys(vesperPlan).forEach(k=>{if(vesperPlan[k]?.id===id)delete vesperPlan[k];});}else{recipes=recipes.filter(x=>x.id!==id);Object.keys(weekPlan).forEach(k=>{if(weekPlan[k]?.id===id)delete weekPlan[k];});}saveAll();backToList(ctx);}
-function showAddRecipe(ctx){
-  formContext=ctx;formData={name:'',time:'',servings:'2',tags:'',type:'vegetarian',vesperKat:'salzig',ingredients:[{name:'',amount:''}],steps:[''],image:null};
-  const listId=ctx==='vesper'?'vesper-recipe-list':'recipe-list';
-  const formId=ctx==='vesper'?'add-vesper-recipe-form':'add-recipe-form';
-  const detId=ctx==='vesper'?'vesper-recipe-detail':'recipe-detail';
-  const tbId=ctx==='vesper'?'vesper-r-toolbar':'mittag-toolbar';
-  document.getElementById(listId).style.display='none';document.getElementById(detId).style.display='none';document.getElementById(tbId).style.display='none';
-  renderAddForm(ctx);document.getElementById(formId).style.display='block';
-}
 function renderAddForm(ctx){
   const isV=ctx==='vesper',formId=isV?'add-vesper-recipe-form':'add-recipe-form';
   document.getElementById(formId).innerHTML=`
